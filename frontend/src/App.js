@@ -55,6 +55,14 @@ function App() {
     formData.append('file', file);
 
     setLoading(true);
+    
+    // Show initial upload message
+    setMessages(prev => [...prev, { 
+      id: prev.length + 1, 
+      text: `Uploading document "${file.name}"...`, 
+      sender: "bot" 
+    }]);
+    
     try {
       const response = await axios.post(`${API_URL}/upload`, formData, {
         headers: {
@@ -68,40 +76,37 @@ function App() {
         excerpt: response.data.text_excerpt 
       }]);
 
-      // Add confirmation message to chat
-      setMessages([
-        ...messages, 
-        { 
-          id: messages.length + 1, 
-          text: response.data.message || `Document "${response.data.filename}" uploaded successfully!`, 
-          sender: "bot" 
-        }
-      ]);
+      // Add detailed success message
+      const processingInfo = response.data.chunk_count > 0 
+        ? `Document processed into ${response.data.chunk_count} chunks with ${response.data.successful_embeddings} embeddings in ${response.data.processing_time.toFixed(2)} seconds.` 
+        : '';
+        
+      setMessages(prev => [...prev, { 
+        id: prev.length + 1, 
+        text: `✅ Document "${response.data.filename}" uploaded successfully! ${processingInfo}`, 
+        sender: "bot" 
+      }]);
       
       // Show warning if any
       if (response.data.warning) {
-        setMessages(prev => [
-          ...prev, 
-          { 
-            id: prev.length + 1, 
-            text: `Note: ${response.data.warning}`, 
-            sender: "bot" 
-          }
-        ]);
+        setMessages(prev => [...prev, { 
+          id: prev.length + 1, 
+          text: `⚠️ Note: ${response.data.warning}`, 
+          sender: "bot" 
+        }]);
       }
       
-      // Auto-select the uploaded document
+      // Auto-select the uploaded document and switch to document mode
       setSelectedDocument(response.data.filename);
+      setChatMode('document');
+      
     } catch (error) {
       console.error('Error uploading document:', error);
-      setMessages([
-        ...messages, 
-        { 
-          id: messages.length + 1, 
-          text: `Error uploading document: ${error.response?.data?.error || error.message}`, 
-          sender: "bot" 
-        }
-      ]);
+      setMessages(prev => [...prev, { 
+        id: prev.length + 1, 
+        text: `❌ Error uploading document: ${error.response?.data?.error || error.message}`, 
+        sender: "bot" 
+      }]);
     } finally {
       setLoading(false);
     }

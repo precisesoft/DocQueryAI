@@ -6,6 +6,12 @@ from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from PyPDF2 import PdfReader
 
+# Add these imports
+import re
+import time
+import numpy as np
+from typing import List, Dict, Any
+
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -110,6 +116,143 @@ def is_embedding_available():
 HAS_EMBEDDING = is_embedding_available()
 logger.info(f"Embedding API available: {HAS_EMBEDDING}")
 
+# Add constants for chunking
+CHUNK_SIZE = 1000  # Characters per chunk
+CHUNK_OVERLAP = 200  # Overlap between chunks for context preservation
+
+# Add this chunking function
+def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHUNK_OVERLAP) -> List[str]:
+    """Split text into overlapping chunks of specified size."""
+    if len(text) <= chunk_size:
+        return [text]
+    
+    chunks = []
+    start = 0
+    
+    while start < len(text):
+        # Find the end of the current chunk
+        end = start + chunk_size
+        
+        # If we're not at the end of the text, try to find a good breaking point
+        if end < len(text):
+            # Try to find sentence end (period, question mark, exclamation point)
+            sentence_end = max(
+                text.rfind('.', start, end),
+                text.rfind('?', start, end),
+                text.rfind('!', start, end)
+            )
+            
+            # If found a sentence end, use it
+            if sentence_end > start + (chunk_size // 2):  # At least half the chunk size
+                end = sentence_end + 1
+            else:
+                # Try to find paragraph break
+                para_end = text.rfind('\n\n', start, end)
+                if para_end > start + (chunk_size // 3):
+                    end = para_end + 2
+                else:
+                    # Try to find line break
+                    line_end = text.rfind('\n', start, end)
+                    if line_end > start + (chunk_size // 3):
+                        end = line_end + 1
+                    else:
+                        # Try to find space
+                        space_end = text.rfind(' ', start, end)
+                        if space_end > start + (chunk_size // 2):
+                            end = space_end + 1
+        
+        # Add the chunk
+        chunks.append(text[start:end])
+        
+        # Move start position for next chunk, considering overlap
+        start = end - chunk_overlap
+        
+        # Make sure we're making progress
+        if start >= len(text):
+            break
+    
+    return chunks
+
+# Add this function to process chunks and generate embeddings
+def process_document_chunks(text: str) -> Dict[str, Any]:
+    """Process a document by chunking and generating embeddings for each chunk."""
+    start_time = time.time()
+    
+    # Split text into chunks
+    chunks = chunk_text(text)
+    logger.info(f"Document split into {len(chunks)} chunks")
+    
+    # Generate embeddings for each chunk
+    chunk_data = []
+    for i, chunk in enumerate(chunks):
+        logger.info(f"Generating embedding for chunk {i+1}/{len(chunks)}")
+        
+        embedding = get_embedding(chunk)
+        
+        # Store chunk and its embedding
+        if embedding:
+            chunk_data.append({
+                "chunk_id": i,
+                "text": chunk,
+                "embedding": embedding
+            })
+        else:
+            logger.warning(f"Failed to generate embedding for chunk {i+1}")
+    
+    process_time = time.time() - start_time
+    logger.info(f"Document processing completed in {process_time:.2f} seconds")
+    
+    return {
+        "chunks": chunk_data,
+        "chunk_count": len(chunks),
+        "successful_embeddings": len(chunk_data),
+        "processing_time": process_time
+    }
+
+# Add this function for semantic search
+
+def vector_similarity(vec1, vec2):
+    """Compute cosine similarity between two vectors."""
+    if not vec1 or not vec2:
+        return 0
+    
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    magnitude1 = sum(a * a for a in vec1) ** 0.5
+    magnitude2 = sum(b * b for b in vec2) ** 0.5
+    
+    if magnitude1 * magnitude2 == 0:
+        return 0
+    
+    return dot_product / (magnitude1 * magnitude2)
+
+def find_relevant_chunks(query: str, doc_name: str, top_k: int = 3):
+    """Find the most relevant chunks for a query using semantic search."""
+    if doc_name not in document_store or not document_store[doc_name].get("chunks"):
+        return []
+    
+    # Get query embedding
+    query_embedding = get_embedding(query)
+    if not query_embedding:
+        logger.warning("Could not generate embedding for query")
+        return []
+    
+    # Get document chunks
+    chunks = document_store[doc_name]["chunks"]
+    
+    # Calculate similarity scores
+    chunk_scores = []
+    for chunk in chunks:
+        chunk_embedding = chunk.get("embedding")
+        if chunk_embedding:
+            similarity = vector_similarity(query_embedding, chunk_embedding)
+            chunk_scores.append((chunk, similarity))
+    
+    # Sort by similarity score
+    chunk_scores.sort(key=lambda x: x[1], reverse=True)
+    
+    # Return top_k chunks
+    return [chunk for chunk, score in chunk_scores[:top_k]]
+
 # API routes
 @app.route('/api/upload', methods=['POST'])
 def upload_document():
@@ -154,20 +297,21 @@ def upload_document():
 
         logger.info(f"Extracted {len(text)} characters from file")
         
-        # Get embedding for the document if service is available
-        embedding = []
+        # Process document with chunking if embeddings are available
+        chunk_data = {"chunks": [], "chunk_count": 0, "successful_embeddings": 0}
         if HAS_EMBEDDING:
-            logger.info("Generating embedding...")
-            embedding = get_embedding(text)
-            logger.info(f"Generated embedding with {len(embedding)} dimensions")
-        else:
-            logger.warning("Embedding service not available, skipping embedding generation")
+            logger.info("Processing document with chunking...")
+            chunk_data = process_document_chunks(text)
+            logger.info(f"Document processed into {chunk_data['chunk_count']} chunks with {chunk_data['successful_embeddings']} embeddings")
         
         # Save the document data in memory
         document_store[filename] = {
             "text": text,
-            "embedding": embedding,
-            "path": save_path
+            "chunks": chunk_data["chunks"],
+            "path": save_path,
+            "processed": True,
+            "chunk_count": chunk_data["chunk_count"],
+            "has_embeddings": chunk_data["successful_embeddings"] > 0
         }
         
         # Return success response
@@ -175,12 +319,14 @@ def upload_document():
             "filename": filename,
             "text_excerpt": text[:200],
             "success": True,
-            "message": "Document uploaded successfully and ready for chat!",
-            "has_embedding": len(embedding) > 0
+            "message": f"Document uploaded and processed into {chunk_data['chunk_count']} chunks!",
+            "chunk_count": chunk_data["chunk_count"],
+            "successful_embeddings": chunk_data["successful_embeddings"],
+            "processing_time": chunk_data.get("processing_time", 0)
         }
         
-        if not embedding:
-            result["warning"] = "Embeddings could not be generated. Some features may be limited."
+        if not chunk_data["chunks"]:
+            result["warning"] = "Embeddings could not be generated. Semantic search will not be available."
             
         return jsonify(result)
         
@@ -206,11 +352,32 @@ def chat():
         
         # Prepare context based on mode
         system_message = "You are a helpful assistant."
+        
+        # Process document if in document mode
         if use_documents and document_names:
             doc_name = document_names[0]
             if doc_name in document_store:
-                doc_text = document_store[doc_name]["text"]
-                system_message = f"You are a helpful assistant. Use the following document as context to answer questions:\n\n{doc_text[:2000]}"
+                # Use semantic search to find relevant chunks
+                if document_store[doc_name].get("chunks"):
+                    relevant_chunks = find_relevant_chunks(message, doc_name)
+                    
+                    if relevant_chunks:
+                        # Combine relevant chunks for context
+                        context_text = "\n\n---\n\n".join(chunk["text"] for chunk in relevant_chunks)
+                        system_message = (
+                            f"You are a helpful assistant. Use the following document excerpts as context to answer questions.\n\n"
+                            f"Document: {doc_name}\n\n{context_text}"
+                        )
+                        logger.info(f"Using {len(relevant_chunks)} relevant chunks for context")
+                    else:
+                        # Fallback to using first part of document if no relevant chunks found
+                        doc_text = document_store[doc_name]["text"]
+                        system_message = f"You are a helpful assistant. Use the following document as context to answer questions:\n\n{doc_text[:2000]}"
+                        logger.warning("No relevant chunks found, using document start instead")
+                else:
+                    # No chunks available, use regular document text
+                    doc_text = document_store[doc_name]["text"]
+                    system_message = f"You are a helpful assistant. Use the following document as context to answer questions:\n\n{doc_text[:2000]}"
         
         # Set up streaming response to LLM API
         def generate():
