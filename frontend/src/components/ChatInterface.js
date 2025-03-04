@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiSend, FiSave, FiChevronsDown } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
+import ModelSettings from './ModelSettings';
 
 // Add a small indicator to show if document mode is active
 function ChatInterface({ 
@@ -10,7 +11,9 @@ function ChatInterface({
   chatMode, 
   onToggleMode,
   onSaveConversation,
-  onNewChat
+  onNewChat,
+  modelSettings,
+  onUpdateModelSettings
 }) {
   const [input, setInput] = useState('');
   const endOfMessagesRef = useRef(null);
@@ -113,6 +116,11 @@ function ChatInterface({
         </div>
         
         <div className="header-actions">
+          <ModelSettings
+            currentSettings={modelSettings}
+            onSave={onUpdateModelSettings}
+          />
+          
           <button 
             className="new-chat-button"
             onClick={onNewChat}

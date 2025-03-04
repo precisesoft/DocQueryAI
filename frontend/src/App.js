@@ -23,6 +23,11 @@ function App() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [savedConversations, setSavedConversations] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [modelSettings, setModelSettings] = useState({
+    model: 'deepseek-r1-distill-qwen-32b-mlx',
+    temperature: 0.7,
+    maxTokens: -1
+  });
 
   // Fetch documents on component mount
   useEffect(() => {
@@ -129,11 +134,14 @@ function App() {
     ]);
   
     try {
-      // Prepare the payload
+      // Prepare the payload with model settings
       const payload = {
         message: text,
         use_documents: chatMode === 'document',
-        documents: selectedDocument ? [selectedDocument] : []
+        documents: selectedDocument ? [selectedDocument] : [],
+        model: modelSettings.model,
+        temperature: modelSettings.temperature,
+        max_tokens: modelSettings.maxTokens
       };
       
       // Use fetch for streaming (instead of axios)
@@ -446,6 +454,8 @@ function App() {
         onToggleMode={toggleChatMode}
         onSaveConversation={() => setSaveModalOpen(true)}
         onNewChat={startNewChat}
+        modelSettings={modelSettings}
+        onUpdateModelSettings={setModelSettings}
       />
       
       <SaveConversationModal

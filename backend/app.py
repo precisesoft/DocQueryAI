@@ -26,7 +26,7 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs("./documents", exist_ok=True)
 
 # API endpoints
-LLM_API_URL = "http://localhost:1234/v1"
+LLM_API_URL = "http://llm-service:1234/v1"  # Using Docker service name
 EMBEDDING_ENDPOINT = f"{LLM_API_URL}/embeddings"
 CHAT_ENDPOINT = f"{LLM_API_URL}/chat/completions"
 EMBEDDING_MODEL = "text-embedding-bge-m3"
@@ -350,6 +350,11 @@ def chat():
         use_documents = data.get("use_documents", False)
         document_names = data.get("documents", [])
         
+        # Get model parameters
+        model = data.get("model", DEFAULT_MODEL)
+        temperature = data.get("temperature", DEFAULT_TEMPERATURE)
+        max_tokens = data.get("max_tokens", DEFAULT_MAX_TOKENS)
+        
         # Prepare context based on mode
         system_message = "You are a helpful assistant."
         
@@ -381,19 +386,19 @@ def chat():
         
         # Set up streaming response to LLM API
         def generate():
-            # Call API with streaming enabled
-            logger.info(f"Calling chat API with streaming")
+            # Call API with streaming enabled and selected parameters
+            logger.info(f"Calling chat API with model: {model}, temp: {temperature}, max_tokens: {max_tokens}")
             response = requests.post(
                 CHAT_ENDPOINT,
                 headers={"Content-Type": "application/json"},
                 json={
-                    "model": CHAT_MODEL,
+                    "model": model,
                     "messages": [
                         {"role": "system", "content": system_message},
                         {"role": "user", "content": message}
                     ],
-                    "temperature": 0.7,
-                    "max_tokens": -1,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
                     "stream": True  # Enable streaming
                 },
                 stream=True  # Enable HTTP streaming
@@ -505,8 +510,46 @@ def clear_documents():
         logger.exception(f"Error clearing documents: {e}")
         return jsonify({"error": str(e)}), 500
 
+# Add this endpoint to fetch available models
+
+DEFAULT_MODEL = "deepseek-r1-distill-qwen-32b-mlx"  # Default model
+DEFAULT_TEMPERATURE = 0.7
+DEFAULT_MAX_TOKENS = -1
+
+@app.route('/api/models', methods=['GET'])
+def list_models():
+    try:
+        # Call the models endpoint of your local API
+        response = requests.get(f"{LLM_API_URL}/models")
+        
+        if response.status_code == 200:
+            models_data = response.json()
+            return jsonify(models_data)
+        else:
+            logger.error(f"Failed to fetch models: {response.status_code}")
+            return jsonify({
+                "error": f"Failed to fetch models: {response.status_code}",
+                # Fallback to some common models that might be available
+                "data": [
+                    {"id": "deepseek-r1-distill-qwen-32b-mlx"},
+                    {"id": "deephermes-3-llama-3-8b-preview"},
+                    {"id": "llama3-8b-8192"}
+                ]
+            }), 502
+    except Exception as e:
+        logger.exception(f"Error fetching models: {e}")
+        return jsonify({
+            "error": str(e),
+            # Fallback to some common models
+            "data": [
+                {"id": "deepseek-r1-distill-qwen-32b-mlx"},
+                {"id": "deephermes-3-llama-3-8b-preview"},
+                {"id": "llama3-8b-8192"}
+            ]
+        }), 500
+
 # Run the app
 if __name__ == '__main__':
     port = 5001  # Use port 5001 to avoid conflict with AirPlay on Mac
     logger.info(f"Starting Flask server on port {port}")
-    app.run(debug=True, port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)

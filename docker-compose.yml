@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./documents:/app/documents
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-production}
+    networks:
+      - app-network
+    depends_on:
+      - llm-service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    # Updates for production React environment configuration
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5001/api}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # LLM service - assuming this is a local LLM server like Ollama
+  llm-service:
+    image: ollama/ollama:latest
+    ports:
+      - "1234:1234"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=${OLLAMA_HOST:-0.0.0.0}
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1234/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Automatically pull models on startup
+    entrypoint: >
+      sh -c "
+        echo 'Starting Ollama service...' &&
+        ollama serve &
+        sleep 10 &&
+        echo 'Pulling required models...' &&
+        ollama pull text-embedding-bge-m3 &&
+        ollama pull deepseek-r1-distill-qwen-32b-mlx &&
+        echo 'Models pulled successfully' &&
+        wait
+      "
+
+# Shared network
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes for persistent data
+volumes:
+  uploads:
+  documents:
+  ollama_models:

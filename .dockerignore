@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+docker-compose.yml
+**/Dockerfile
+
+# Node.js (frontend)
+**/node_modules
+**/npm-debug.log
+**/build
+
+# Python (backend)
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+**/.env
+**/.venv
+**/env/
+**/venv/
+**/ENV/
+**/.Python
+
+# Uploaded and generated files
+uploads/*
+documents/*
+embeddings.json
+
+# IDEs and editors
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
