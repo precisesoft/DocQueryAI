@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
+import SaveConversationModal from './components/SaveConversationModal';
 import './App.css';
 
 // Make sure this matches your backend URL and port
@@ -19,10 +20,20 @@ function App() {
   ]);
   const [loading, setLoading] = useState(false);
   const [chatMode, setChatMode] = useState('general'); // 'general' or 'document'
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [savedConversations, setSavedConversations] = useState([]);
 
   // Fetch documents on component mount
   useEffect(() => {
     fetchDocuments();
+  }, []);
+
+  // Load saved conversations from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('savedConversations');
+    if (saved) {
+      setSavedConversations(JSON.parse(saved));
+    }
   }, []);
 
   const fetchDocuments = async () => {
@@ -191,6 +202,134 @@ function App() {
     ]);
   };
 
+  // Save conversation to localStorage
+  const handleSaveConversation = (title) => {
+    const newConversation = {
+      id: Date.now().toString(),
+      title: title,
+      timestamp: new Date().toISOString(),
+      messages: messages,
+      document: selectedDocument,
+      chatMode: chatMode
+    };
+
+    const updatedConversations = [...savedConversations, newConversation];
+    setSavedConversations(updatedConversations);
+    localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
+  };
+
+  // Generate a suggested title based on conversation
+  const generateSuggestedTitle = () => {
+    // Find first user message or use current date
+    const firstUserMsg = messages.find(msg => msg.sender === 'user');
+    if (firstUserMsg) {
+      // Truncate to reasonable length for a title
+      return firstUserMsg.text.substring(0, 30) + (firstUserMsg.text.length > 30 ? '...' : '');
+    }
+    return `Conversation ${new Date().toLocaleDateString()}`;
+  };
+
+  // Update the loadConversation function
+
+  const loadConversation = (conversation) => {
+    // Only show confirmation if there are user messages in the current conversation
+    const hasUserMessages = messages.some(msg => msg.sender === 'user');
+    
+    if (hasUserMessages && messages.length > 1) {
+      const confirmLoad = window.confirm(
+        "Loading a saved conversation will replace your current chat. Continue?"
+      );
+      if (!confirmLoad) return;
+    }
+    
+    setMessages(conversation.messages);
+    setSelectedDocument(conversation.document);
+    setChatMode(conversation.chatMode || 'general');
+  };
+
+  // Delete a saved conversation
+  const deleteConversation = (id) => {
+    const updatedConversations = savedConversations.filter(conv => conv.id !== id);
+    setSavedConversations(updatedConversations);
+    localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
+  };
+
+  // Export a single conversation as a JSON file
+  const exportConversation = (conversation) => {
+    const dataStr = JSON.stringify(conversation, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${conversation.title.replace(/\s+/g, '_')}_${conversation.id}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export all conversations as a single JSON file
+  const exportAllConversations = () => {
+    const dataStr = JSON.stringify(savedConversations, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `all_conversations_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Import conversations from a JSON file
+  const importConversations = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        
+        // Handle both single conversation and array of conversations
+        let newConversations = [];
+        if (Array.isArray(imported)) {
+          newConversations = imported;
+        } else {
+          newConversations = [imported];
+        }
+        
+        // Validate imported data structure
+        const validConversations = newConversations.filter(conv => 
+          conv.id && conv.title && conv.messages && Array.isArray(conv.messages)
+        );
+        
+        if (validConversations.length === 0) {
+          alert('No valid conversations found in the imported file.');
+          return;
+        }
+        
+        // Add imported conversations to existing ones
+        const updatedConversations = [...savedConversations, ...validConversations];
+        setSavedConversations(updatedConversations);
+        localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
+        
+        alert(`Successfully imported ${validConversations.length} conversation(s).`);
+      } catch (error) {
+        console.error('Error importing conversations:', error);
+        alert('Failed to import conversations. Invalid file format.');
+      }
+      
+      // Clear the input
+      event.target.value = null;
+    };
+    
+    reader.readAsText(file);
+  };
+
   return (
     <div className="app-container">
       <Sidebar 
@@ -199,6 +338,12 @@ function App() {
         onSelectDocument={setSelectedDocument}
         onUpload={handleDocumentUpload}
         loading={loading}
+        savedConversations={savedConversations}
+        onLoadConversation={loadConversation}
+        onDeleteConversation={deleteConversation}
+        onExportConversation={exportConversation}
+        onExportAllConversations={exportAllConversations}
+        onImportConversations={importConversations}
       />
       <ChatInterface 
         messages={messages}
@@ -206,6 +351,13 @@ function App() {
         loading={loading}
         chatMode={chatMode}
         onToggleMode={toggleChatMode}
+        onSaveConversation={() => setSaveModalOpen(true)}
+      />
+      <SaveConversationModal
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        onSave={handleSaveConversation}
+        suggestedTitle={generateSuggestedTitle()}
       />
     </div>
   );

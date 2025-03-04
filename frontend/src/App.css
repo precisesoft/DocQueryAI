@@ -381,3 +381,296 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 400px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel, .btn-save {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.btn-save {
+  background-color: #4a68fd;
+  color: white;
+}
+
+/* Sidebar Tab Styles */
+.sidebar-tabs {
+  display: flex;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+}
+
+.tab.active {
+  color: #4a68fd;
+  border-bottom: 2px solid #4a68fd;
+}
+
+/* Saved Conversation Styles */
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.conversation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  transition: background-color 0.2s;
+}
+
+.conversation-item:hover {
+  background-color: #e6e6e6;
+}
+
+.conversation-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.conversation-icon {
+  color: #4a68fd;
+}
+
+.conversation-name {
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.conversation-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.delete-conversation {
+  color: #f44336;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  padding: 4px;
+}
+
+.delete-conversation:hover {
+  opacity: 1;
+}
+
+.no-conversations {
+  color: #666;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Update chat header for save button */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+}
+
+.left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.save-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Add these styles */
+
+/* Conversation Actions */
+.conversation-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.action-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.export-all {
+  background-color: #4a68fd;
+  color: white;
+}
+
+.export-all:hover:not(:disabled) {
+  background-color: #3854d6;
+}
+
+.export-all:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.import {
+  background-color: #ff9800;
+  color: white;
+}
+
+.import:hover {
+  background-color: #e68a00;
+}
+
+/* Update conversation item to accommodate multiple action buttons */
+.conversation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  transition: background-color 0.2s;
+}
+
+.conversation-item:hover {
+  background-color: #e6e6e6;
+}
+
+.conversation-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.conversation-actions {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 0;
+}
+
+.action-icon {
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.action-icon.export:hover {
+  color: #4a68fd;
+  background-color: rgba(74, 104, 253, 0.1);
+}
+
+.action-icon.delete:hover {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+}

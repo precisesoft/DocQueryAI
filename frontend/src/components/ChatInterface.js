@@ -1,9 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiSend } from 'react-icons/fi';
+import { FiSend, FiSave } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
 
 // Add a small indicator to show if document mode is active
-function ChatInterface({ messages, onSendMessage, loading, chatMode, onToggleMode }) {
+function ChatInterface({ 
+  messages, 
+  onSendMessage, 
+  loading, 
+  chatMode, 
+  onToggleMode,
+  onSaveConversation
+}) {
   const [input, setInput] = useState('');
   const endOfMessagesRef = useRef(null);
   const inputRef = useRef(null);
@@ -29,17 +36,28 @@ function ChatInterface({ messages, onSendMessage, loading, chatMode, onToggleMod
   return (
     <div className="chat-interface">
       <div className="chat-header">
-        <h1>AI Assistant</h1>
-        <div className="mode-toggle">
-          <span className={`mode-label ${chatMode === 'general' ? 'active' : ''}`}>General</span>
-          <button 
-            className={`toggle-button ${chatMode === 'document' ? 'active' : ''}`} 
-            onClick={onToggleMode}
-          >
-            <div className="toggle-slider"></div>
-          </button>
-          <span className={`mode-label ${chatMode === 'document' ? 'active' : ''}`}>Document</span>
+        <div className="left-section">
+          <h1>AI Assistant</h1>
+          <div className="mode-toggle">
+            <span className={`mode-label ${chatMode === 'general' ? 'active' : ''}`}>General</span>
+            <button 
+              className={`toggle-button ${chatMode === 'document' ? 'active' : ''}`} 
+              onClick={onToggleMode}
+            >
+              <div className="toggle-slider"></div>
+            </button>
+            <span className={`mode-label ${chatMode === 'document' ? 'active' : ''}`}>Document</span>
+          </div>
         </div>
+        
+        <button 
+          className="save-button"
+          onClick={onSaveConversation}
+          title="Save conversation"
+          disabled={messages.length <= 1}
+        >
+          <FiSave /> Save Chat
+        </button>
       </div>
       
       <div className="messages-container">
