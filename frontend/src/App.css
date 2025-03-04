@@ -1,3 +1,18 @@
+/* Add at the top of your CSS file or update existing font settings */
+
+/* Base font settings */
+:root {
+  --font-primary: Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Apply Monaco to the entire application */
+body {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
 .App {
   text-align: center;
 }
@@ -808,4 +823,98 @@
 
 .clear-button:hover {
   background-color: #d32f2f;
+}
+
+/* Add these styles for code formatting */
+
+/* General markdown styles */
+.message-content p {
+  margin: 0.5em 0;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.message-content ul,
+.message-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.message-content li {
+  margin: 0.3em 0;
+}
+
+/* Code block styles */
+.message-content pre {
+  margin: 0.8em 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #282c34;
+  font-size: 12px; /* Set font size to 12px */
+}
+
+.message-content code {
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 12px; /* Set font size to 12px */
+}
+
+/* Inline code style - adjust size to match */
+.message-content :not(pre) > code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 12px; /* Set font size to 12px */
+  color: #d63384;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Additional styling for syntax highlighter to ensure font consistency */
+.code-block-wrapper {
+  font-size: 12px;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  position: relative;
+}
+
+/* Ensure SyntaxHighlighter uses the correct font */
+.code-block-wrapper pre {
+  font-family: inherit !important;
+  font-size: 12px !important;
+}
+
+/* Add a copy button for code blocks */
+pre {
+  position: relative;
+}
+
+pre .copy-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 3px 6px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+pre:hover .copy-button {
+  opacity: 1;
+}
+
+pre .copy-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
 }
