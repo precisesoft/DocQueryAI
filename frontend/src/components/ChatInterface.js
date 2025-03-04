@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiSend, FiSave } from 'react-icons/fi';
+import { FiSend, FiSave, FiChevronsDown } from 'react-icons/fi';
 import MessageBubble from './MessageBubble';
 
 // Add a small indicator to show if document mode is active
@@ -9,16 +9,73 @@ function ChatInterface({
   loading, 
   chatMode, 
   onToggleMode,
-  onSaveConversation
+  onSaveConversation,
+  onNewChat
 }) {
   const [input, setInput] = useState('');
   const endOfMessagesRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
-  // Scroll to bottom when messages change
+  // Improved scroll to bottom when messages change
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = () => {
+      if (endOfMessagesRef.current) {
+        // Use a small timeout to ensure DOM is updated
+        setTimeout(() => {
+          endOfMessagesRef.current.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'end'
+          });
+        }, 100);
+      }
+    };
+    
+    scrollToBottom();
+    
+    // Also add event listener for window resize to maintain scroll position
+    window.addEventListener('resize', scrollToBottom);
+    return () => window.removeEventListener('resize', scrollToBottom);
   }, [messages]);
+
+  // Add this useEffect to ensure proper container size
+  useEffect(() => {
+    const updateContainerHeight = () => {
+      if (messagesContainerRef.current) {
+        // Ensure the container takes the available space
+        const headerHeight = document.querySelector('.chat-header')?.offsetHeight || 0;
+        const inputHeight = document.querySelector('.input-area')?.offsetHeight || 0;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate available space
+        const availableHeight = viewportHeight - headerHeight - inputHeight;
+        messagesContainerRef.current.style.height = `${availableHeight}px`;
+      }
+    };
+    
+    updateContainerHeight();
+    window.addEventListener('resize', updateContainerHeight);
+    
+    return () => window.removeEventListener('resize', updateContainerHeight);
+  }, []);
+
+  // Add this useEffect to detect when to show the scroll button
+  useEffect(() => {
+    const handleScroll = () => {
+      if (messagesContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+        // Show button when scrolled up more than 300px from bottom
+        setShowScrollButton(scrollHeight - scrollTop - clientHeight > 300);
+      }
+    };
+    
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   // Focus input when component mounts
   useEffect(() => {
@@ -31,6 +88,11 @@ function ChatInterface({
       onSendMessage(input);
       setInput('');
     }
+  };
+
+  // Add a function to handle manual scrolling
+  const scrollToBottom = () => {
+    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -50,17 +112,27 @@ function ChatInterface({
           </div>
         </div>
         
-        <button 
-          className="save-button"
-          onClick={onSaveConversation}
-          title="Save conversation"
-          disabled={messages.length <= 1}
-        >
-          <FiSave /> Save Chat
-        </button>
+        <div className="header-actions">
+          <button 
+            className="new-chat-button"
+            onClick={onNewChat}
+            title="Start a new chat"
+          >
+            New Chat
+          </button>
+          
+          <button 
+            className="save-button"
+            onClick={onSaveConversation}
+            title="Save conversation"
+            disabled={messages.length <= 1}
+          >
+            <FiSave /> Save Chat
+          </button>
+        </div>
       </div>
       
-      <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef}>
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -75,6 +147,11 @@ function ChatInterface({
             <div className="dot"></div>
             <div className="dot"></div>
           </div>
+        )}
+        {showScrollButton && (
+          <button className="scroll-bottom-button" onClick={scrollToBottom} title="Scroll to bottom">
+            <FiChevronsDown />
+          </button>
         )}
         <div ref={endOfMessagesRef} />
       </div>

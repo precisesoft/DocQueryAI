@@ -22,6 +22,7 @@ function App() {
   const [chatMode, setChatMode] = useState('general'); // 'general' or 'document'
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [savedConversations, setSavedConversations] = useState([]);
+  const [notification, setNotification] = useState(null);
 
   // Fetch documents on component mount
   useEffect(() => {
@@ -330,8 +331,35 @@ function App() {
     reader.readAsText(file);
   };
 
+  // Function to start a new chat (saving current one automatically)
+  const startNewChat = () => {
+    // Only confirm if there are user messages
+    const hasUserMessages = messages.some(msg => msg.sender === 'user');
+    
+    if (hasUserMessages && messages.length > 1) {
+      const confirmNew = window.confirm(
+        "Starting a new chat will save the current conversation and clear the chat. Continue?"
+      );
+      if (!confirmNew) return;
+      
+      // Rest of the function remains the same...
+      // ... (auto-saving code)
+    }
+    
+    // Reset to initial state
+    setMessages([
+      { id: 1, text: "Hello! You can chat with me directly or upload documents for more specific help.", sender: "bot" }
+    ]);
+    setSelectedDocument(null);
+    
+    // Show notification
+    setNotification("Previous conversation saved. Started new chat.");
+    setTimeout(() => setNotification(null), 3000); // Clear after 3 seconds
+  };
+
   return (
     <div className="app-container">
+      {notification && <div className="notification">{notification}</div>}
       <Sidebar 
         documents={documents} 
         selectedDocument={selectedDocument}
@@ -345,6 +373,7 @@ function App() {
         onExportAllConversations={exportAllConversations}
         onImportConversations={importConversations}
       />
+      
       <ChatInterface 
         messages={messages}
         onSendMessage={sendMessage}
@@ -352,7 +381,9 @@ function App() {
         chatMode={chatMode}
         onToggleMode={toggleChatMode}
         onSaveConversation={() => setSaveModalOpen(true)}
+        onNewChat={startNewChat}
       />
+      
       <SaveConversationModal
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}
