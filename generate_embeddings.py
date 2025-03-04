@@ -18,9 +18,23 @@ def read_pdf_file(file_path):
     return text
 
 def get_embedding(text):
-    # Dummy embedding for testing:
-    embedding = [0.123, 0.456, 0.789, 0.012, 0.345]  # Extend to an appropriate length if needed
-    print("Received embedding:", embedding[:5], "...")
+    payload = {
+        "model": MODEL_NAME,
+        "text": text
+    }
+    response = requests.post(EMBEDDING_ENDPOINT, json=payload, stream=True)
+    embedding = []
+    print("Streaming response:")
+    for chunk in response.iter_lines(decode_unicode=True):
+        if chunk:
+            try:
+                data = json.loads(chunk)
+                print(data)  # Print the streamed JSON chunk
+                if "embedding_chunk" in data:
+                    embedding.extend(data["embedding_chunk"])
+            except json.JSONDecodeError:
+                print("Non-json chunk:", chunk)
+    print("Final embedding:", embedding)
     return embedding
 
 def process_documents(folder_path):
