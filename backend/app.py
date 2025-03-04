@@ -173,33 +173,32 @@ def chat():
                     ],
                     "temperature": 0.7,
                     "max_tokens": -1,
-                    "stream": True  # Enable streaming
+                    "stream": True
                 },
-                stream=True  # Enable HTTP streaming
+                stream=True
             )
             
-            # Stream the response chunks to frontend
-            collected_chunks = []
+            # Stream the response chunks to frontend - SEND ONLY DELTAS
             for chunk in response.iter_lines():
                 if chunk:
                     try:
                         chunk_data = chunk.decode('utf-8')
-                        # Remove "data: " prefix if present (common in SSE)
+                        # Remove "data: " prefix if present
                         if chunk_data.startswith("data: "):
                             chunk_data = chunk_data[6:]
                         
                         # Skip "[DONE]" message
                         if chunk_data.strip() == "[DONE]":
                             continue
-                            
+                                
                         json_data = json.loads(chunk_data)
-                        # Extract the text from the chunk
+                        # Extract only the new text from the chunk
                         if 'choices' in json_data and len(json_data['choices']) > 0:
                             if 'delta' in json_data['choices'][0]:
                                 content = json_data['choices'][0]['delta'].get('content', '')
                                 if content:
-                                    collected_chunks.append(content)
-                                    yield f"data: {json.dumps({'text': content})}\n\n"
+                                    # Send ONLY the new delta content
+                                    yield f"data: {json.dumps({'delta': content})}\n\n"
                     except Exception as e:
                         print(f"Error processing chunk: {e}, chunk: {chunk}")
                         continue
@@ -212,6 +211,26 @@ def chat():
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+# For non-streaming responses, preserve the full structure
+@app.route('/api/chat/non-streaming', methods=['POST'])
+def chat_non_streaming():
+    # Process request...
+    
+    # Call API
+    response = requests.post(
+        CHAT_ENDPOINT,
+        headers={"Content-Type": "application/json"},
+        json={
+            # Request data...
+        }
+    )
+    
+    if response.status_code == 200:
+        result = response.json()
+        bot_message = result["choices"][0]["message"]["content"]
+        # Don't modify the message structure - send it as is
+        return jsonify({"response": bot_message})
 
 @app.route('/api/test', methods=['GET'])
 def test():

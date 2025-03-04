@@ -342,3 +342,42 @@
   color: #4a68fd;
   font-weight: 500;
 }
+
+/* Add these styles to your existing CSS */
+
+.thinking-section {
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 8px;
+}
+
+.thinking-toggle {
+  font-size: 0.8rem;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.thinking-toggle:hover {
+  color: #4a68fd;
+}
+
+.thinking-content {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #666;
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.message-content {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}

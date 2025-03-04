@@ -135,9 +135,9 @@ function App() {
               if (data.end) {
                 // Stream ended
                 break;
-              } else if (data.text) {
-                // Update the message with the new text
-                accumulatedText += data.text;
+              } else if (data.delta) {
+                // Add ONLY the new delta to our accumulated text
+                accumulatedText += data.delta;
                 setMessages(prevMessages => 
                   prevMessages.map(msg => 
                     msg.id === botResponseId 
