@@ -46,6 +46,8 @@ function App() {
     }
   };
 
+  // Update the handleDocumentUpload function
+
   const handleDocumentUpload = async (file) => {
     if (!file) return;
 
@@ -71,10 +73,22 @@ function App() {
         ...messages, 
         { 
           id: messages.length + 1, 
-          text: `Document "${response.data.filename}" uploaded successfully!`, 
+          text: response.data.message || `Document "${response.data.filename}" uploaded successfully!`, 
           sender: "bot" 
         }
       ]);
+      
+      // Show warning if any
+      if (response.data.warning) {
+        setMessages(prev => [
+          ...prev, 
+          { 
+            id: prev.length + 1, 
+            text: `Note: ${response.data.warning}`, 
+            sender: "bot" 
+          }
+        ]);
+      }
       
       // Auto-select the uploaded document
       setSelectedDocument(response.data.filename);
@@ -357,6 +371,50 @@ function App() {
     setTimeout(() => setNotification(null), 3000); // Clear after 3 seconds
   };
 
+  // Add this function to your App component
+
+  // Function to clear all documents
+  const clearDocuments = async () => {
+    // Ask for confirmation
+    if (!window.confirm('Are you sure you want to remove all uploaded documents?')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/documents/clear`, {
+        delete_files: true  // Also remove the files from the server
+      });
+      
+      // Clear documents from state
+      setDocuments([]);
+      setSelectedDocument(null);
+      
+      // Add success message to chat
+      setMessages([
+        ...messages, 
+        { 
+          id: messages.length + 1, 
+          text: response.data.message || "All documents have been removed.", 
+          sender: "bot" 
+        }
+      ]);
+      
+    } catch (error) {
+      console.error('Error clearing documents:', error);
+      setMessages([
+        ...messages, 
+        { 
+          id: messages.length + 1, 
+          text: `Error clearing documents: ${error.response?.data?.error || error.message}`, 
+          sender: "bot" 
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="app-container">
       {notification && <div className="notification">{notification}</div>}
@@ -372,6 +430,7 @@ function App() {
         onExportConversation={exportConversation}
         onExportAllConversations={exportAllConversations}
         onImportConversations={importConversations}
+        onClearDocuments={clearDocuments}
       />
       
       <ChatInterface 

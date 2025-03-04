@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FiUpload, FiFile, FiMessageSquare, FiTrash2, FiDownload, FiUploadCloud } from 'react-icons/fi';
+import { FiUpload, FiFile, FiMessageSquare, FiTrash2, FiDownload, FiUploadCloud, FiXCircle } from 'react-icons/fi';
 
 function Sidebar({ 
   documents, 
@@ -12,7 +12,8 @@ function Sidebar({
   onDeleteConversation,
   onExportConversation,
   onExportAllConversations,
-  onImportConversations 
+  onImportConversations,
+  onClearDocuments  // New prop
 }) {
   const fileInputRef = useRef();
   const importInputRef = useRef();
@@ -63,6 +64,18 @@ function Sidebar({
             </label>
             {loading && <div className="loader"></div>}
           </div>
+          
+          {documents.length > 0 && (
+            <div className="clear-documents">
+              <button 
+                className="clear-button"
+                onClick={onClearDocuments}
+                title="Remove all documents"
+              >
+                <FiXCircle /> Clear All Documents
+              </button>
+            </div>
+          )}
           
           <div className="document-list">
             {documents.length === 0 ? (
