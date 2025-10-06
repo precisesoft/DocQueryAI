@@ -70,18 +70,11 @@ export default function RevampLayout({
     <div className="h-full grid grid-rows-[auto_1fr]">
       {/* Top Nav */}
       <div className="border-b bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button className="md:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-            <div className="h-8 w-8 rounded-md bg-primary hidden md:block" />
-            <div className="text-xl font-semibold hidden md:block">DocQueryAI</div>
-            <div className="ml-4 text-sm text-muted-foreground hidden sm:block">
-              {chatMode === 'document' ? 'Document mode' : 'General chat'}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="px-4 py-3 flex items-center gap-2">
+          <button className="md:hidden mr-auto" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" onClick={onToggleTheme} title="Toggle theme">
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
@@ -116,6 +109,7 @@ export default function RevampLayout({
           <div className="h-full w-full flex flex-col">
             <div className="p-4 border-b">
               <div className="space-y-3">
+                <div className="text-lg font-semibold">DocQueryAI</div>
                 <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
                 <NavItem id="chat" icon={FiPlus} label="Chat" />
                 <NavItem id="documents" icon={FiUpload} label="Documents" />
@@ -158,7 +152,7 @@ export default function RevampLayout({
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent side="left">
             <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle>DocQueryAI</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-3">
               <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
