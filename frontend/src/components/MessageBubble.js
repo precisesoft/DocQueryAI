@@ -5,51 +5,41 @@ import CodeBlock from './CodeBlock';
 function MessageBubble({ message, sender, streaming }) {
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const [parsedContent, setParsedContent] = useState({ thinking: '', visible: '' });
-  
-  // Parse message whenever it changes
+
   useEffect(() => {
     if (sender === 'bot') {
       const thinkEndIndex = message.indexOf('</think>');
-      
       if (thinkEndIndex !== -1) {
         const thinking = message.substring(0, thinkEndIndex).trim();
-        const visible = message.substring(thinkEndIndex + 8).trim(); // 8 is length of </think>
+        const visible = message.substring(thinkEndIndex + 8).trim();
         setParsedContent({ thinking, visible });
       } else {
-        // No thinking tag found, all content is visible
         setParsedContent({ thinking: '', visible: message });
       }
     } else {
-      // User messages have no thinking part
       setParsedContent({ thinking: '', visible: message });
     }
   }, [message, sender]);
-  
+
   return (
-    <div className={`message-bubble ${sender}-message`}>
+    <div className={sender === 'user' ? 'text-right' : 'text-left'}>
       {parsedContent.thinking && (
-        <div className="thinking-section">
-          <div 
-            className="thinking-toggle" 
+        <div className="mb-2">
+          <button
             onClick={() => setThinkingExpanded(!thinkingExpanded)}
+            className="text-xs text-muted-foreground hover:underline"
           >
-            {thinkingExpanded ? '▼' : '►'} Show AI Thinking
-          </div>
-          
+            {thinkingExpanded ? 'Hide' : 'Show'} AI thinking
+          </button>
           {thinkingExpanded && (
-            <div className="thinking-content">
-              {parsedContent.thinking}
-            </div>
+            <pre className="mt-1 whitespace-pre-wrap text-xs bg-muted p-2 rounded-md">{parsedContent.thinking}</pre>
           )}
         </div>
       )}
-      
-      <div className="message-content">
+      <div className="prose prose-sm dark:prose-invert max-w-none">
         {sender === 'user' ? (
-          // Regular text for user messages
           parsedContent.visible
         ) : (
-          // Markdown with code highlighting for bot messages
           <ReactMarkdown
             components={{
               code({node, inline, className, children, ...props}) {
@@ -71,13 +61,8 @@ function MessageBubble({ message, sender, streaming }) {
           </ReactMarkdown>
         )}
       </div>
-      
       {streaming && (
-        <div className="typing-indicator">
-          <div className="dot"></div>
-          <div className="dot"></div>
-          <div className="dot"></div>
-        </div>
+        <div className="mt-1 text-xs text-muted-foreground animate-pulse">typing…</div>
       )}
     </div>
   );

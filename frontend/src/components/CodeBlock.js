@@ -12,17 +12,14 @@ function CodeBlock({ language, value }) {
   };
   
   return (
-    <div className="code-block-wrapper">
-      <button 
-        className="copy-button"
+    <div className="relative">
+      <button
         onClick={handleCopy}
+        className="absolute right-2 top-2 rounded-md border bg-secondary px-2 py-1 text-xs text-secondary-foreground hover:opacity-90"
       >
         {copied ? 'Copied!' : 'Copy'}
       </button>
-      <SyntaxHighlighter 
-        language={language || 'javascript'}
-        style={atomDark}
-      >
+      <SyntaxHighlighter language={language || 'javascript'} style={atomDark}>
         {value}
       </SyntaxHighlighter>
     </div>

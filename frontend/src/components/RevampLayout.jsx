@@ -11,6 +11,7 @@ import { cn } from '../lib/utils';
 import MessageBubble from './MessageBubble';
 import ModelSettings from './ModelSettings';
 import { FiPlus, FiSettings, FiUpload, FiTrash2, FiDownload } from 'react-icons/fi';
+import { Moon, Sun } from 'lucide-react';
 
 const API_URL = 'http://localhost:5001/api';
 
@@ -36,6 +37,9 @@ export default function RevampLayout({
   onExportConversation,
   onExportAllConversations,
   onImportConversations,
+  // dark mode
+  theme = 'light',
+  onToggleTheme,
 }) {
   const [input, setInput] = React.useState('');
   const fileRef = useRef();
@@ -62,6 +66,9 @@ export default function RevampLayout({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={onToggleTheme} title="Toggle theme">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button variant="outline" onClick={onToggleMode}>
               {chatMode === 'document' ? 'Use General' : 'Use Document'}
             </Button>
@@ -192,4 +199,3 @@ export default function RevampLayout({
     </div>
   );
 }
-

@@ -8,6 +8,13 @@ import './index.css';
 const API_URL = 'http://localhost:5001/api';
 
 function App() {
+  // theme (dark mode)
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [messages, setMessages] = useState([
@@ -454,6 +461,8 @@ function App() {
         onExportConversation={exportConversation}
         onExportAllConversations={exportAllConversations}
         onImportConversations={importConversations}
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
       />
       <SaveConversationModal
         isOpen={saveModalOpen}
