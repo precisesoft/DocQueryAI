@@ -351,13 +351,9 @@ export default function RevampLayout({
           {activeTab === 'chat' && (
             <div className="h-full grid grid-rows-[1fr_auto]">
               <ScrollArea className="p-4">
-                <div className="max-w-3xl mx-auto space-y-3">
+                <div className="max-w-3xl mx-auto space-y-2">
                   {messages.map((m) => (
-                    <Card key={m.id} className={cn("border", m.sender === 'user' ? 'bg-white' : 'bg-muted/30')}>
-                      <CardContent className="p-4">
-                        <MessageBubble message={m.text} sender={m.sender} streaming={m.streaming} />
-                      </CardContent>
-                    </Card>
+                    <MessageBubble key={m.id} message={m.text} sender={m.sender} streaming={m.streaming} />
                   ))}
                 </div>
               </ScrollArea>

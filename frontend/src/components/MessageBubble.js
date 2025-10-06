@@ -21,49 +21,59 @@ function MessageBubble({ message, sender, streaming }) {
     }
   }, [message, sender]);
 
+  const isUser = sender === 'user';
+  const containerClass = isUser ? 'justify-end' : 'justify-start';
+  const bubbleClass = isUser
+    ? 'bg-[#0A84FF] text-white rounded-2xl rounded-br-md'
+    : 'bg-muted text-foreground rounded-2xl rounded-bl-md';
+
   return (
-    <div className={sender === 'user' ? 'text-right' : 'text-left'}>
-      {parsedContent.thinking && (
-        <div className="mb-2">
-          <button
-            onClick={() => setThinkingExpanded(!thinkingExpanded)}
-            className="text-xs text-muted-foreground hover:underline"
-          >
-            {thinkingExpanded ? 'Hide' : 'Show'} AI thinking
-          </button>
-          {thinkingExpanded && (
-            <pre className="mt-1 whitespace-pre-wrap text-xs bg-muted p-2 rounded-md">{parsedContent.thinking}</pre>
+    <div className={`w-full flex ${containerClass}`}>
+      <div className="max-w-[75%]">
+        {parsedContent.thinking && (
+          <div className="mb-2">
+            <button
+              onClick={() => setThinkingExpanded(!thinkingExpanded)}
+              className="text-xs text-muted-foreground hover:underline"
+            >
+              {thinkingExpanded ? 'Hide' : 'Show'} AI thinking
+            </button>
+            {thinkingExpanded && (
+              <pre className="mt-1 whitespace-pre-wrap text-xs bg-muted p-2 rounded-md">{parsedContent.thinking}</pre>
+            )}
+          </div>
+        )}
+        <div className={`px-3 py-2 ${bubbleClass}`}>
+          {isUser ? (
+            <div className="whitespace-pre-wrap break-words">{parsedContent.visible}</div>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown
+                components={{
+                  code({node, inline, className, children, ...props}) {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline && match ? (
+                      <CodeBlock 
+                        language={match[1]} 
+                        value={String(children).replace(/\n$/, '')}
+                      />
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                }}
+              >
+                {parsedContent.visible}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
-      )}
-      <div className="prose prose-sm dark:prose-invert max-w-none">
-        {sender === 'user' ? (
-          parsedContent.visible
-        ) : (
-          <ReactMarkdown
-            components={{
-              code({node, inline, className, children, ...props}) {
-                const match = /language-(\w+)/.exec(className || '');
-                return !inline && match ? (
-                  <CodeBlock 
-                    language={match[1]} 
-                    value={String(children).replace(/\n$/, '')}
-                  />
-                ) : (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                );
-              }
-            }}
-          >
-            {parsedContent.visible}
-          </ReactMarkdown>
+        {streaming && !isUser && (
+          <div className="mt-1 text-xs text-muted-foreground animate-pulse">Thinking…</div>
         )}
       </div>
-      {streaming && (
-        <div className="mt-1 text-xs text-muted-foreground animate-pulse">Thinking…</div>
-      )}
     </div>
   );
 }
