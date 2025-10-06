@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Label } from './ui/label';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select';
 import { Button } from './ui/button';
+import { Slider } from './ui/slider';
 
 const API_URL = 'http://localhost:5001/api';
 
@@ -70,16 +71,16 @@ function ModelSettings({ onSave, currentSettings }) {
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="temperature">Temperature: {settings.temperature}</Label>
-        <input
-          id="temperature"
-          type="range"
-          min="0"
-          max="1.2"
-          step="0.1"
-          value={settings.temperature}
-          onChange={(e)=>setSettings({...settings, temperature: parseFloat(e.target.value)})}
-          className="w-full"
+        <div className="flex items-center justify-between">
+          <Label htmlFor="temperature">Temperature</Label>
+          <div className="text-xs text-muted-foreground">{settings.temperature.toFixed(1)}</div>
+        </div>
+        <Slider
+          min={0}
+          max={1.2}
+          step={0.1}
+          value={[settings.temperature]}
+          onValueChange={(v)=>setSettings({...settings, temperature: Number(v[0])})}
         />
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>0 (Precise)</span>
@@ -88,20 +89,20 @@ function ModelSettings({ onSave, currentSettings }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="maxTokens">Max Tokens</Label>
-        <select
-          id="maxTokens"
-          className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-          value={settings.maxTokens}
-          onChange={(e)=>setSettings({...settings, maxTokens: parseFloat(e.target.value)})}
-        >
-          <option value={-1}>No limit</option>
-          <option value={100}>100</option>
-          <option value={500}>500</option>
-          <option value={1000}>1000</option>
-          <option value={2000}>2000</option>
-          <option value={4000}>4000</option>
-          <option value={8000}>8000</option>
-        </select>
+        <Select value={String(settings.maxTokens)} onValueChange={(v)=>setSettings({...settings, maxTokens: parseFloat(v)})}>
+          <SelectTrigger>
+            <SelectValue placeholder="Max tokens" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={"-1"}>No limit</SelectItem>
+            <SelectItem value={"100"}>100</SelectItem>
+            <SelectItem value={"500"}>500</SelectItem>
+            <SelectItem value={"1000"}>1000</SelectItem>
+            <SelectItem value={"2000"}>2000</SelectItem>
+            <SelectItem value={"4000"}>4000</SelectItem>
+            <SelectItem value={"8000"}>8000</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="text-xs text-muted-foreground">-1 means no limit (model decides when to stop)</div>
       </div>
       <div className="flex justify-end">

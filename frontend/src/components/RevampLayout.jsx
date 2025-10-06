@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { cn } from '../lib/utils';
@@ -9,6 +9,8 @@ import MessageBubble from './MessageBubble';
 import ModelSettings from './ModelSettings';
 import { FiPlus, FiSettings, FiUpload, FiTrash2, FiDownload } from 'react-icons/fi';
 import { Moon, Sun } from 'lucide-react';
+import { Switch } from './ui/switch';
+import { Separator } from './ui/separator';
 
 export default function RevampLayout({
   // state
@@ -228,20 +230,33 @@ export default function RevampLayout({
           )}
 
           {activeTab === 'settings' && (
-            <div className="p-4 max-w-2xl">
+            <div className="p-4 max-w-3xl space-y-6">
+              <div>
+                <h1 className="text-xl font-semibold">Settings</h1>
+                <p className="text-sm text-muted-foreground">Configure appearance and model behavior.</p>
+              </div>
               <Card>
                 <CardHeader>
-                  <CardTitle>Settings</CardTitle>
+                  <CardTitle>Appearance</CardTitle>
+                  <CardDescription>Choose how DocQueryAI looks on your device.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <div className="text-sm font-medium mb-2">Theme</div>
-                    <Button variant="outline" onClick={onToggleTheme}>{theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}</Button>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">Dark Mode</div>
+                      <div className="text-sm text-muted-foreground">Switch between light and dark themes.</div>
+                    </div>
+                    <Switch checked={theme === 'dark'} onCheckedChange={onToggleTheme} />
                   </div>
-                  <div>
-                    <div className="text-sm font-medium mb-2">Model</div>
-                    <ModelSettings currentSettings={modelSettings} onSave={onUpdateModelSettings} />
-                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Model</CardTitle>
+                  <CardDescription>Pick a model and tune generation settings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ModelSettings currentSettings={modelSettings} onSave={onUpdateModelSettings} />
                 </CardContent>
               </Card>
             </div>
