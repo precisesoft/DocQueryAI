@@ -62,7 +62,7 @@ function MessageBubble({ message, sender, streaming }) {
         )}
       </div>
       {streaming && (
-        <div className="mt-1 text-xs text-muted-foreground animate-pulse">typing…</div>
+        <div className="mt-1 text-xs text-muted-foreground animate-pulse">Thinking…</div>
       )}
     </div>
   );

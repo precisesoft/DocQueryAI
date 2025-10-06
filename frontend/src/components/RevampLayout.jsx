@@ -7,8 +7,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui
 import { cn } from '../lib/utils';
 import MessageBubble from './MessageBubble';
 import ModelSettings from './ModelSettings';
-import { FiPlus, FiSettings, FiUpload, FiTrash2, FiDownload } from 'react-icons/fi';
-import { Moon, Sun } from 'lucide-react';
+import { FiUpload, FiTrash2, FiDownload } from 'react-icons/fi';
+import { Moon, Sun, MessageSquare, FileText, Settings, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 
@@ -53,18 +54,34 @@ export default function RevampLayout({
   };
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
-  const NavItem = ({ id, icon: Icon, label }) => (
-    <button
-      className={cn(
-        "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground",
-        activeTab === id && "bg-accent text-accent-foreground"
-      )}
-      onClick={() => { onChangeTab(id); setMobileOpen(false); }}
-    >
-      <Icon className="h-4 w-4" /> {label}
-    </button>
-  );
+  const NavItem = ({ id, icon: Icon, label }) => {
+    const btn = (
+      <button
+        className={cn(
+          "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground",
+          activeTab === id && "bg-accent text-accent-foreground",
+          sidebarCollapsed && "justify-center"
+        )}
+        onClick={() => { onChangeTab(id); setMobileOpen(false); }}
+        title={label}
+      >
+        <Icon className="h-5 w-5" />
+        {!sidebarCollapsed && <span>{label}</span>}
+      </button>
+    );
+    return sidebarCollapsed ? (
+      <TooltipProvider delayDuration={100}>
+        <Tooltip>
+          <TooltipTrigger asChild>{btn}</TooltipTrigger>
+          <TooltipContent side="right">{label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ) : (
+      btn
+    );
+  };
 
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
@@ -82,11 +99,11 @@ export default function RevampLayout({
               {chatMode === 'document' ? 'Use General' : 'Use Document'}
             </Button>
             <Button onClick={onNewChat} variant="secondary">
-              <FiPlus className="mr-2" /> New Chat
+              <MessageSquare className="mr-2 h-4 w-4" /> New Chat
             </Button>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline"><FiSettings className="mr-2" /> Model</Button>
+                <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Model</Button>
               </SheetTrigger>
               <SheetContent side="right">
                 <SheetHeader>
@@ -103,49 +120,60 @@ export default function RevampLayout({
       </div>
 
       {/* Body */}
-      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] overflow-hidden">
+      <div className={cn("grid grid-cols-1 overflow-hidden md:grid-cols-[300px_1fr]", sidebarCollapsed && "md:grid-cols-[72px_1fr]") }>
         {/* Sidebar (desktop) */}
         <div className="border-r bg-background hidden md:flex">
           <div className="h-full w-full flex flex-col">
-            <div className="p-4 border-b">
-              <div className="space-y-3">
-                <div className="text-lg font-semibold">DocQueryAI</div>
-                <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
-                <NavItem id="chat" icon={FiPlus} label="Chat" />
-                <NavItem id="documents" icon={FiUpload} label="Documents" />
-                <NavItem id="settings" icon={FiSettings} label="Settings" />
-              </div>
-            </div>
-            <div className="px-4 py-3 border-t space-y-2">
+            <div className="p-3 border-b">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">Conversations</div>
-                <div className="flex items-center gap-2">
-                  <input ref={importRef} className="hidden" type="file" accept=".json" onChange={onImportConversations} />
-                  <Button variant="outline" size="sm" onClick={() => importRef.current?.click()}>Import</Button>
-                  <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><FiDownload className="mr-2" />Export</Button>
-                </div>
+                {sidebarCollapsed ? (
+                  <div className="text-base font-semibold">DQ</div>
+                ) : (
+                  <div className="text-lg font-semibold">DocQueryAI</div>
+                )}
+                <Button variant="ghost" size="icon" onClick={()=>setSidebarCollapsed(!sidebarCollapsed)} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
+                  {sidebarCollapsed ? <ChevronsRight className="h-4 w-4"/> : <ChevronsLeft className="h-4 w-4"/>}
+                </Button>
               </div>
-              <ScrollArea className="h-48">
-                <div className="space-y-2">
-                  {savedConversations.length === 0 ? (
-                    <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
-                  ) : (
-                    savedConversations.map((conv) => (
-                      <div key={conv.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
-                        <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); }}>
-                          <div className="text-sm font-medium truncate">{conv.title}</div>
-                          <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
-                        </button>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" onClick={()=>onExportConversation(conv)}><FiDownload /></Button>
-                          <Button variant="destructive" size="sm" onClick={()=>onDeleteConversation(conv.id)}><FiTrash2 /></Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
+              <div className="space-y-2 mt-3">
+                {!sidebarCollapsed && <div className="text-[11px] uppercase text-muted-foreground px-1">Navigation</div>}
+                <NavItem id="chat" icon={MessageSquare} label="Chat" />
+                <NavItem id="documents" icon={FileText} label="Documents" />
+                <NavItem id="settings" icon={Settings} label="Settings" />
+              </div>
             </div>
+            {!sidebarCollapsed && (
+              <div className="px-4 py-3 border-t space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">Conversations</div>
+                  <div className="flex items-center gap-2">
+                    <input ref={importRef} className="hidden" type="file" accept=".json" onChange={onImportConversations} />
+                    <Button variant="outline" size="sm" onClick={() => importRef.current?.click()}>Import</Button>
+                    <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><FiDownload className="mr-2" />Export</Button>
+                  </div>
+                </div>
+                <ScrollArea className="h-48">
+                  <div className="space-y-2">
+                    {savedConversations.length === 0 ? (
+                      <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
+                    ) : (
+                      savedConversations.map((conv) => (
+                        <div key={conv.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
+                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); }}>
+                            <div className="text-sm font-medium truncate">{conv.title}</div>
+                            <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
+                          </button>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={()=>onExportConversation(conv)}><FiDownload /></Button>
+                            <Button variant="destructive" size="sm" onClick={()=>onDeleteConversation(conv.id)}><FiTrash2 /></Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
           </div>
         </div>
         {/* Sidebar (mobile) */}
@@ -156,9 +184,9 @@ export default function RevampLayout({
             </SheetHeader>
             <div className="mt-4 space-y-3">
               <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
-              <NavItem id="chat" icon={FiPlus} label="Chat" />
-              <NavItem id="documents" icon={FiUpload} label="Documents" />
-              <NavItem id="settings" icon={FiSettings} label="Settings" />
+              <NavItem id="chat" icon={MessageSquare} label="Chat" />
+              <NavItem id="documents" icon={FileText} label="Documents" />
+              <NavItem id="settings" icon={Settings} label="Settings" />
               <div className="pt-4 border-t" />
               <div className="text-xs uppercase text-muted-foreground px-1">Conversations</div>
               <ScrollArea className="h-64">
