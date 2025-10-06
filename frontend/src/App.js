@@ -24,7 +24,7 @@ function App() {
   const [savedConversations, setSavedConversations] = useState([]);
   const [notification, setNotification] = useState(null);
   const [modelSettings, setModelSettings] = useState({
-    model: 'deepseek-r1-distill-qwen-32b-mlx',
+    model: 'phi3:mini',
     temperature: 0.7,
     maxTokens: -1
   });

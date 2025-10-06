@@ -11,7 +11,7 @@ function ModelSettings({ onSave, currentSettings }) {
   const [error, setError] = useState('');
   
   const [settings, setSettings] = useState({
-    model: currentSettings?.model || 'deepseek-r1-distill-qwen-32b-mlx',
+    model: currentSettings?.model || 'phi3:mini',
     temperature: currentSettings?.temperature || 0.7,
     maxTokens: currentSettings?.maxTokens || -1,
   });

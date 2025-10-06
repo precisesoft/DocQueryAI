@@ -51,7 +51,7 @@ services:
   llm-service:
     image: ollama/ollama:latest
     ports:
-      - "1234:1234"
+      - "11434:11434"
     volumes:
       - ollama_models:/root/.ollama
     environment:
@@ -60,7 +60,7 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:1234/api/tags"]
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -72,8 +72,9 @@ services:
         ollama serve &
         sleep 10 &&
         echo 'Pulling required models...' &&
-        ollama pull text-embedding-bge-m3 &&
-        ollama pull deepseek-r1-distill-qwen-32b-mlx &&
+        ollama pull bge-m3 &&
+        ollama pull phi3:mini &&
+        ollama pull moondream &&
         echo 'Models pulled successfully' &&
         wait
       "

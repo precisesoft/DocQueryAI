@@ -2,3 +2,4 @@ flask
 pypdf2
 requests
 flask-cors
+PyMuPDF

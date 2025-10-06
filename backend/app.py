@@ -5,6 +5,8 @@ import requests
 from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from PyPDF2 import PdfReader
+import fitz  # PyMuPDF
+import base64
 
 # Add these imports
 import re
@@ -26,11 +28,13 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs("./documents", exist_ok=True)
 
 # API endpoints
-LLM_API_URL = "http://llm-service:1234/v1"  # Using Docker service name
+LLM_API_URL = "http://llm-service:11434/v1"  # Using Docker service name (Ollama default port)
+OLLAMA_NATIVE_API = "http://llm-service:11434/api"  # Native Ollama endpoints for vision
 EMBEDDING_ENDPOINT = f"{LLM_API_URL}/embeddings"
 CHAT_ENDPOINT = f"{LLM_API_URL}/chat/completions"
-EMBEDDING_MODEL = "text-embedding-bge-m3"
-CHAT_MODEL = "deepseek-r1-distill-qwen-32b-mlx"
+EMBEDDING_MODEL = "bge-m3"
+CHAT_MODEL = "phi3:mini"
+VISION_MODEL = os.getenv("VISION_MODEL", "moondream")
 
 # Store uploaded documents in memory
 document_store = {}
@@ -65,6 +69,61 @@ def read_pdf_file(file_path):
     except Exception as e:
         logger.error(f"Error reading PDF file: {e}")
         return ""
+
+def render_pdf_to_images_b64(file_path: str, scale: float = 2.0, max_pages: int = 0) -> List[str]:
+    """Render PDF pages to base64-encoded PNG images using PyMuPDF.
+    scale: 2.0 ~ 144 DPI (approx), higher gives sharper OCR but slower.
+    max_pages: limit number of pages (0 = all).
+    """
+    images_b64: List[str] = []
+    try:
+        doc = fitz.open(file_path)
+        page_count = len(doc)
+        pages = range(page_count) if max_pages <= 0 else range(min(max_pages, page_count))
+        mat = fitz.Matrix(scale, scale)
+        for i in pages:
+            page = doc.load_page(i)
+            pix = page.get_pixmap(matrix=mat, alpha=False)
+            png_bytes = pix.tobytes("png")
+            images_b64.append(base64.b64encode(png_bytes).decode("utf-8"))
+        doc.close()
+    except Exception as e:
+        logger.exception(f"Error rendering PDF to images: {e}")
+    return images_b64
+
+def ocr_pdf_with_vlm(file_path: str, vision_model: str = VISION_MODEL, pages_limit: int = 0) -> str:
+    """Use a vision LLM via Ollama's native /api/generate endpoint to transcribe a scanned PDF."""
+    images = render_pdf_to_images_b64(file_path, scale=2.0, max_pages=pages_limit)
+    if not images:
+        return ""
+    prompt = (
+        "You are an OCR assistant. Transcribe the page content faithfully into plain text. "
+        "Preserve reading order, bullet points, and approximate tables as tab-separated text. "
+        "Do not add commentary or headers; output only the transcribed text."
+    )
+    all_text: List[str] = []
+    for idx, img in enumerate(images):
+        try:
+            resp = requests.post(
+                f"{OLLAMA_NATIVE_API}/generate",
+                json={
+                    "model": vision_model,
+                    "prompt": prompt,
+                    "images": [img],
+                    "stream": False
+                },
+                timeout=120
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            page_text = data.get("response", "") or data.get("data", "")
+            if page_text:
+                all_text.append(page_text.strip())
+            else:
+                logger.warning(f"Empty OCR response for page {idx+1}")
+        except Exception as e:
+            logger.exception(f"Vision OCR failed on page {idx+1}: {e}")
+    return "\n\n".join(all_text).strip()
 
 def get_embedding(text):
     payload = {
@@ -287,6 +346,14 @@ def upload_document():
         elif file_ext == ".pdf":
             logger.info("Processing PDF file")
             text = read_pdf_file(save_path)
+            if not text or len(text.strip()) < 20:
+                logger.info("Minimal or no text extracted; attempting vision OCR via LLM...")
+                ocr_text = ocr_pdf_with_vlm(save_path)
+                if ocr_text:
+                    text = ocr_text
+                    logger.info("Vision OCR succeeded; proceeding with embeddings.")
+                else:
+                    logger.warning("Vision OCR produced no text.")
         else:
             logger.warning(f"Unsupported file type: {file_ext}")
             return jsonify({"error": "Unsupported file type"}), 400
@@ -512,7 +579,7 @@ def clear_documents():
 
 # Add this endpoint to fetch available models
 
-DEFAULT_MODEL = "deepseek-r1-distill-qwen-32b-mlx"  # Default model
+DEFAULT_MODEL = "phi3:mini"  # Default model (CPU-friendly)
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_MAX_TOKENS = -1
 
@@ -531,9 +598,9 @@ def list_models():
                 "error": f"Failed to fetch models: {response.status_code}",
                 # Fallback to some common models that might be available
                 "data": [
-                    {"id": "deepseek-r1-distill-qwen-32b-mlx"},
-                    {"id": "deephermes-3-llama-3-8b-preview"},
-                    {"id": "llama3-8b-8192"}
+                    {"id": "phi3:mini"},
+                    {"id": "qwen2.5:3b-instruct"},
+                    {"id": "llama3.1:8b-instruct"}
                 ]
             }), 502
     except Exception as e:
@@ -542,9 +609,9 @@ def list_models():
             "error": str(e),
             # Fallback to some common models
             "data": [
-                {"id": "deepseek-r1-distill-qwen-32b-mlx"},
-                {"id": "deephermes-3-llama-3-8b-preview"},
-                {"id": "llama3-8b-8192"}
+                {"id": "phi3:mini"},
+                {"id": "qwen2.5:3b-instruct"},
+                {"id": "llama3.1:8b-instruct"}
             ]
         }), 500
 
