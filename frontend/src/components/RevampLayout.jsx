@@ -1,19 +1,14 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { Label } from './ui/label';
 import { ScrollArea } from './ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select';
 import { cn } from '../lib/utils';
 import MessageBubble from './MessageBubble';
 import ModelSettings from './ModelSettings';
 import { FiPlus, FiSettings, FiUpload, FiTrash2, FiDownload } from 'react-icons/fi';
 import { Moon, Sun } from 'lucide-react';
-
-const API_URL = 'http://localhost:5001/api';
 
 export default function RevampLayout({
   // state
@@ -24,6 +19,7 @@ export default function RevampLayout({
   chatMode,
   modelSettings,
   savedConversations,
+  activeTab,
   // actions
   onSelectDocument,
   onUpload,
@@ -37,6 +33,7 @@ export default function RevampLayout({
   onExportConversation,
   onExportAllConversations,
   onImportConversations,
+  onChangeTab,
   // dark mode
   theme = 'light',
   onToggleTheme,
@@ -53,14 +50,31 @@ export default function RevampLayout({
     }
   };
 
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+
+  const NavItem = ({ id, icon: Icon, label }) => (
+    <button
+      className={cn(
+        "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground",
+        activeTab === id && "bg-accent text-accent-foreground"
+      )}
+      onClick={() => { onChangeTab(id); setMobileOpen(false); }}
+    >
+      <Icon className="h-4 w-4" /> {label}
+    </button>
+  );
+
   return (
     <div className="h-full grid grid-rows-[auto_1fr]">
       {/* Top Nav */}
       <div className="border-b bg-card">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-md bg-primary" />
-            <div className="text-xl font-semibold">DocQueryAI</div>
+            <button className="md:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <div className="h-8 w-8 rounded-md bg-primary hidden md:block" />
+            <div className="text-xl font-semibold hidden md:block">DocQueryAI</div>
             <div className="ml-4 text-sm text-muted-foreground hidden sm:block">
               {chatMode === 'document' ? 'Document mode' : 'General chat'}
             </div>
@@ -94,64 +108,35 @@ export default function RevampLayout({
       </div>
 
       {/* Body */}
-      <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] overflow-hidden">
-        {/* Sidebar */}
-        <div className="border-r bg-background">
-          <div className="h-full flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] overflow-hidden">
+        {/* Sidebar (desktop) */}
+        <div className="border-r bg-background hidden md:flex">
+          <div className="h-full w-full flex flex-col">
             <div className="p-4 border-b">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Upload Document</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-2">
-                    <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt" onChange={(e)=>e.target.files[0] && onUpload(e.target.files[0])} />
-                    <Button onClick={() => fileRef.current?.click()} disabled={loading}>
-                      <FiUpload className="mr-2" /> {loading ? 'Uploading...' : 'Choose File'}
-                    </Button>
-                    <Button variant="outline" onClick={onClearDocuments} disabled={!documents.length}>
-                      <FiTrash2 className="mr-2" /> Clear All
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="px-4 pt-4 text-sm text-muted-foreground">Documents</div>
-            <ScrollArea className="flex-1 px-4 pb-4">
-              <div className="space-y-2">
-                {documents.length === 0 ? (
-                  <div className="text-sm text-muted-foreground px-2">No documents uploaded.</div>
-                ) : (
-                  documents.map((doc) => (
-                    <button key={doc.name} onClick={() => onSelectDocument(doc.name)} className={cn(
-                      "w-full text-left p-3 rounded-md border hover:bg-accent hover:text-accent-foreground",
-                      selectedDocument === doc.name && "border-primary"
-                    )}>
-                      <div className="font-medium truncate">{doc.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{doc.excerpt}</div>
-                    </button>
-                  ))
-                )}
+              <div className="space-y-3">
+                <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
+                <NavItem id="chat" icon={FiPlus} label="Chat" />
+                <NavItem id="documents" icon={FiUpload} label="Documents" />
+                <NavItem id="settings" icon={FiSettings} label="Settings" />
               </div>
-            </ScrollArea>
-
-            <div className="px-4 py-3 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">Saved Chats</div>
+            </div>
+            <div className="px-4 py-3 border-t space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">Conversations</div>
                 <div className="flex items-center gap-2">
                   <input ref={importRef} className="hidden" type="file" accept=".json" onChange={onImportConversations} />
                   <Button variant="outline" size="sm" onClick={() => importRef.current?.click()}>Import</Button>
                   <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><FiDownload className="mr-2" />Export</Button>
                 </div>
               </div>
-              <ScrollArea className="h-40">
+              <ScrollArea className="h-48">
                 <div className="space-y-2">
                   {savedConversations.length === 0 ? (
                     <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
                   ) : (
                     savedConversations.map((conv) => (
                       <div key={conv.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
-                        <button className="flex-1 text-left" onClick={() => onLoadConversation(conv)}>
+                        <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); }}>
                           <div className="text-sm font-medium truncate">{conv.title}</div>
                           <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
                         </button>
@@ -167,33 +152,127 @@ export default function RevampLayout({
             </div>
           </div>
         </div>
+        {/* Sidebar (mobile) */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left">
+            <SheetHeader>
+              <SheetTitle>Menu</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-3">
+              <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
+              <NavItem id="chat" icon={FiPlus} label="Chat" />
+              <NavItem id="documents" icon={FiUpload} label="Documents" />
+              <NavItem id="settings" icon={FiSettings} label="Settings" />
+              <div className="pt-4 border-t" />
+              <div className="text-xs uppercase text-muted-foreground px-1">Conversations</div>
+              <ScrollArea className="h-64">
+                <div className="space-y-2">
+                  {savedConversations.length === 0 ? (
+                    <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
+                  ) : (
+                    savedConversations.map((conv) => (
+                      <button key={conv.id} className="w-full text-left p-2 rounded-md border" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); }}>
+                        <div className="text-sm font-medium truncate">{conv.title}</div>
+                        <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </SheetContent>
+        </Sheet>
 
-        {/* Chat area */}
+        {/* Main content */}
         <div className="h-full">
-          <div className="h-full grid grid-rows-[1fr_auto]">
-            <ScrollArea className="p-4">
-              <div className="max-w-3xl mx-auto space-y-3">
-                {messages.map((m) => (
-                  <Card key={m.id} className={cn("border", m.sender === 'user' ? 'bg-white' : 'bg-muted/30')}>
-                    <CardContent className="p-4">
-                      <MessageBubble message={m.text} sender={m.sender} streaming={m.streaming} />
-                    </CardContent>
-                  </Card>
-                ))}
+          {activeTab === 'documents' && (
+            <div className="h-full grid grid-rows-[auto_1fr]">
+              <div className="p-4 border-b">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Upload Document</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center gap-2">
+                      <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt" onChange={(e)=>e.target.files[0] && onUpload(e.target.files[0])} />
+                      <Button onClick={() => fileRef.current?.click()} disabled={loading}>
+                        <FiUpload className="mr-2" /> {loading ? 'Uploading...' : 'Choose File'}
+                      </Button>
+                      <Button variant="outline" onClick={onClearDocuments} disabled={!documents.length}>
+                        <FiTrash2 className="mr-2" /> Clear All
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </ScrollArea>
-            <form onSubmit={handleSend} className="border-t bg-background p-4">
-              <div className="max-w-3xl mx-auto flex gap-2">
-                <Textarea
-                  value={input}
-                  onChange={(e)=>setInput(e.target.value)}
-                  placeholder={chatMode === 'document' ? 'Ask about your document…' : 'Ask anything…'}
-                  className="min-h-[56px]"
-                />
-                <Button type="submit" disabled={loading || !input.trim()}>Send</Button>
-              </div>
-            </form>
-          </div>
+              <ScrollArea className="p-4">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {documents.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">No documents uploaded.</div>
+                  ) : (
+                    documents.map((doc) => (
+                      <Card key={doc.name}>
+                        <CardContent className="p-3">
+                          <div className="font-medium truncate">{doc.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{doc.excerpt}</div>
+                          <div className="mt-2">
+                            <Button size="sm" variant="outline" onClick={()=>onSelectDocument(doc.name)}>Use in Chat</Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="p-4 max-w-2xl">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <div className="text-sm font-medium mb-2">Theme</div>
+                    <Button variant="outline" onClick={onToggleTheme}>{theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}</Button>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium mb-2">Model</div>
+                    <ModelSettings currentSettings={modelSettings} onSave={onUpdateModelSettings} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'chat' && (
+            <div className="h-full grid grid-rows-[1fr_auto]">
+              <ScrollArea className="p-4">
+                <div className="max-w-3xl mx-auto space-y-3">
+                  {messages.map((m) => (
+                    <Card key={m.id} className={cn("border", m.sender === 'user' ? 'bg-white' : 'bg-muted/30')}>
+                      <CardContent className="p-4">
+                        <MessageBubble message={m.text} sender={m.sender} streaming={m.streaming} />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+              <form onSubmit={handleSend} className="border-t bg-background p-4">
+                <div className="max-w-3xl mx-auto flex gap-2">
+                  <Textarea
+                    value={input}
+                    onChange={(e)=>setInput(e.target.value)}
+                    placeholder={chatMode === 'document' ? 'Ask about your document…' : 'Ask anything…'}
+                    className="min-h-[56px]"
+                  />
+                  <Button type="submit" disabled={loading || !input.trim()}>Send</Button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>

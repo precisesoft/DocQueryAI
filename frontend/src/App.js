@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import SaveConversationModal from './components/SaveConversationModal';
 import RevampLayout from './components/RevampLayout';
 import './index.css';
 
@@ -26,9 +25,9 @@ function App() {
   ]);
   const [loading, setLoading] = useState(false);
   const [chatMode, setChatMode] = useState('general'); // 'general' or 'document'
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [savedConversations, setSavedConversations] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'documents' | 'settings'
   const [modelSettings, setModelSettings] = useState({
     model: 'phi3:mini',
     temperature: 0.7,
@@ -236,31 +235,23 @@ function App() {
     ]);
   };
 
-  // Save conversation to localStorage
-  const handleSaveConversation = (title) => {
-    const newConversation = {
-      id: Date.now().toString(),
-      title: title,
-      timestamp: new Date().toISOString(),
-      messages: messages,
-      document: selectedDocument,
-      chatMode: chatMode
-    };
-
-    const updatedConversations = [...savedConversations, newConversation];
-    setSavedConversations(updatedConversations);
-    localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
-  };
-
-  // Generate a suggested title based on conversation
-  const generateSuggestedTitle = () => {
-    // Find first user message or use current date
+  // Autosave current conversation if it has user messages
+  const saveCurrentConversationIfNeeded = () => {
+    const hasUserMessages = messages.some(msg => msg.sender === 'user');
+    if (!hasUserMessages) return;
     const firstUserMsg = messages.find(msg => msg.sender === 'user');
-    if (firstUserMsg) {
-      // Truncate to reasonable length for a title
-      return firstUserMsg.text.substring(0, 30) + (firstUserMsg.text.length > 30 ? '...' : '');
-    }
-    return `Conversation ${new Date().toLocaleDateString()}`;
+    const title = firstUserMsg ? (firstUserMsg.text.length > 30 ? firstUserMsg.text.slice(0,30) + '...' : firstUserMsg.text) : `Conversation ${new Date().toLocaleDateString()}`;
+    const conv = {
+      id: Date.now().toString(),
+      title,
+      timestamp: new Date().toISOString(),
+      messages,
+      document: selectedDocument,
+      chatMode,
+    };
+    const updated = [...savedConversations, conv];
+    setSavedConversations(updated);
+    localStorage.setItem('savedConversations', JSON.stringify(updated));
   };
 
   // Update the loadConversation function
@@ -279,6 +270,7 @@ function App() {
     setMessages(conversation.messages);
     setSelectedDocument(conversation.document);
     setChatMode(conversation.chatMode || 'general');
+    setActiveTab('chat');
   };
 
   // Delete a saved conversation
@@ -374,9 +366,8 @@ function App() {
         "Starting a new chat will save the current conversation and clear the chat. Continue?"
       );
       if (!confirmNew) return;
-      
-      // Rest of the function remains the same...
-      // ... (auto-saving code)
+      // autosave previous conversation
+      saveCurrentConversationIfNeeded();
     }
     
     // Reset to initial state
@@ -384,6 +375,7 @@ function App() {
       { id: 1, text: "Hello! You can chat with me directly or upload documents for more specific help.", sender: "bot" }
     ]);
     setSelectedDocument(null);
+    setActiveTab('chat');
     
     // Show notification
     setNotification("Previous conversation saved. Started new chat.");
@@ -449,6 +441,8 @@ function App() {
         chatMode={chatMode}
         modelSettings={modelSettings}
         savedConversations={savedConversations}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
         onSelectDocument={setSelectedDocument}
         onUpload={handleDocumentUpload}
         onClearDocuments={clearDocuments}
@@ -463,12 +457,6 @@ function App() {
         onImportConversations={importConversations}
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-      />
-      <SaveConversationModal
-        isOpen={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
-        onSave={handleSaveConversation}
-        suggestedTitle={generateSuggestedTitle()}
       />
     </div>
   );
