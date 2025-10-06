@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui
 import { cn } from '../lib/utils';
 import MessageBubble from './MessageBubble';
 import ModelSettings from './ModelSettings';
-import { Moon, Sun, MessageSquare, FileText, Settings, ChevronsLeft, ChevronsRight, Upload, Trash2, Download, Pencil, Check, X } from 'lucide-react';
+import { Moon, Sun, MessageSquare, FileText, Settings, ChevronsLeft, ChevronsRight, Upload, Trash2, Download, Pencil, Check, X, Search } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
@@ -58,6 +58,44 @@ export default function RevampLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [editingId, setEditingId] = React.useState(null);
   const [editingValue, setEditingValue] = React.useState('');
+  const [selectedConvId, setSelectedConvId] = React.useState(null);
+  const [convQuery, setConvQuery] = React.useState('');
+
+  // Keyboard shortcuts: N new chat, R rename selected, Delete delete selected
+  React.useEffect(() => {
+    const handler = (e) => {
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select' || document.activeElement?.getAttribute('contenteditable') === 'true';
+      if (isTyping) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        onNewChat();
+        return;
+      }
+      if ((e.key === 'r' || e.key === 'R') && selectedConvId) {
+        e.preventDefault();
+        const conv = savedConversations.find(c => c.id === selectedConvId);
+        if (conv) {
+          setEditingId(conv.id);
+          setEditingValue(conv.title);
+        }
+        return;
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedConvId) {
+        e.preventDefault();
+        onDeleteConversation(selectedConvId);
+        return;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedConvId, savedConversations, onNewChat, onDeleteConversation]);
+
+  const filteredConversations = React.useMemo(() => {
+    const q = convQuery.trim().toLowerCase();
+    if (!q) return savedConversations;
+    return savedConversations.filter(c => (c.title || '').toLowerCase().includes(q));
+  }, [convQuery, savedConversations]);
 
   const NavItem = ({ id, icon: Icon, label }) => {
     const btn = (
@@ -155,16 +193,33 @@ export default function RevampLayout({
                     <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><Download className="mr-2 h-4 w-4" />Export</Button>
                   </div>
                 </div>
+                <div className="relative">
+                  <Input
+                    value={convQuery}
+                    onChange={(e)=>setConvQuery(e.target.value)}
+                    placeholder="Search conversations"
+                    className="pl-8 h-9"
+                  />
+                  <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                </div>
                 <ScrollArea className="h-48">
                   <div className="space-y-2">
-                    {savedConversations.length === 0 ? (
+                    {filteredConversations.length === 0 ? (
                       <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
                     ) : (
-                      savedConversations.map((conv) => (
-                        <div key={conv.id} className="group flex items-center justify-between gap-2 p-2 rounded-md border">
+                      filteredConversations.map((conv) => (
+                        <div key={conv.id} className={cn("group flex items-center justify-between gap-2 p-2 rounded-md border", selectedConvId === conv.id && "ring-1 ring-primary")}
+                          onMouseEnter={()=> setSelectedConvId(conv.id)}
+                        >
                           {editingId === conv.id ? (
                             <div className="flex-1 flex items-center gap-2">
-                              <Input value={editingValue} onChange={(e)=>setEditingValue(e.target.value)} className="h-8" />
+                              <Input
+                                value={editingValue}
+                                onChange={(e)=>setEditingValue(e.target.value)}
+                                className="h-8"
+                                autoFocus
+                                onFocus={(e)=> e.target.select()}
+                              />
                               <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
                                 <Check className="h-4 w-4" />
                               </Button>
@@ -173,7 +228,7 @@ export default function RevampLayout({
                               </Button>
                             </div>
                           ) : (
-                            <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); }}>
+                            <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setSelectedConvId(conv.id); }}>
                               <div className="text-sm font-medium truncate">{conv.title}</div>
                               <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
                             </button>
@@ -234,16 +289,33 @@ export default function RevampLayout({
               <NavItem id="settings" icon={Settings} label="Settings" />
               <div className="pt-4 border-t" />
               <div className="text-xs uppercase text-muted-foreground px-1">Conversations</div>
-              <ScrollArea className="h-64">
+              <div className="relative mt-1">
+                <Input
+                  value={convQuery}
+                  onChange={(e)=>setConvQuery(e.target.value)}
+                  placeholder="Search conversations"
+                  className="pl-8 h-9"
+                />
+                <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              <ScrollArea className="h-64 mt-2">
                 <div className="space-y-2">
-                  {savedConversations.length === 0 ? (
+                  {filteredConversations.length === 0 ? (
                     <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
                   ) : (
-                    savedConversations.map((conv) => (
-                      <div key={conv.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
+                    filteredConversations.map((conv) => (
+                      <div key={conv.id} className={cn("flex items-center justify-between gap-2 p-2 rounded-md border", selectedConvId === conv.id && "ring-1 ring-primary")}
+                        onMouseEnter={()=> setSelectedConvId(conv.id)}
+                      >
                         {editingId === conv.id ? (
                           <div className="flex-1 flex items-center gap-2">
-                            <Input value={editingValue} onChange={(e)=>setEditingValue(e.target.value)} className="h-8" />
+                            <Input
+                              value={editingValue}
+                              onChange={(e)=>setEditingValue(e.target.value)}
+                              className="h-8"
+                              autoFocus
+                              onFocus={(e)=> e.target.select()}
+                            />
                             <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
                               <Check className="h-4 w-4" />
                             </Button>
@@ -252,7 +324,7 @@ export default function RevampLayout({
                             </Button>
                           </div>
                         ) : (
-                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); }}>
+                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); setSelectedConvId(conv.id); }}>
                             <div className="text-sm font-medium truncate">{conv.title}</div>
                             <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
                           </button>
