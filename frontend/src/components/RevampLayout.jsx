@@ -161,9 +161,9 @@ export default function RevampLayout({
       </div>
 
       {/* Body */}
-      <div className={cn("grid grid-cols-1 overflow-hidden md:grid-cols-[300px_1fr]", sidebarCollapsed && "md:grid-cols-[72px_1fr]") }>
+      <div className={cn("grid grid-cols-1 h-full min-h-0 overflow-hidden md:grid-cols-[300px_1fr]", sidebarCollapsed && "md:grid-cols-[72px_1fr]") }>
         {/* Sidebar (desktop) */}
-        <div className="border-r bg-background hidden md:flex">
+        <div className="border-r bg-background hidden md:flex h-full">
           <div className="h-full w-full flex flex-col">
             <div className="p-3 border-b">
               <div className="flex items-center justify-between">
@@ -184,7 +184,7 @@ export default function RevampLayout({
               </div>
             </div>
             {!sidebarCollapsed && (
-              <div className="px-4 py-3 border-t space-y-2">
+              <div className="px-4 py-3 border-t flex-1 min-h-0 flex flex-col space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">Conversations</div>
                   <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export default function RevampLayout({
                   />
                   <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 </div>
-                <ScrollArea className="h-48">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="space-y-2">
                     {filteredConversations.length === 0 ? (
                       <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
