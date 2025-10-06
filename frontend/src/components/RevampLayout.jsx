@@ -125,10 +125,125 @@ export default function RevampLayout({
   };
 
   return (
-    <div className="h-full grid grid-rows-[auto_1fr]">
-      {/* Top Nav */}
-      <div className="border-b bg-card">
-        <div className="px-4 py-3 flex items-center gap-2">
+    <div className={cn("h-full grid grid-cols-1 md:grid-cols-[300px_1fr]", sidebarCollapsed && "md:grid-cols-[72px_1fr]") }>
+      {/* Sidebar (desktop) full height */}
+      <div className="hidden md:flex h-full border-r bg-background">
+        <div className="h-full w-full flex flex-col">
+          <div className="p-3 border-b">
+            <div className="flex items-center justify-between">
+              {sidebarCollapsed ? (
+                <div className="text-base font-semibold">DQ</div>
+              ) : (
+                <div className="text-lg font-semibold">DocQueryAI</div>
+              )}
+              <Button variant="ghost" size="icon" onClick={()=>setSidebarCollapsed(!sidebarCollapsed)} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
+                {sidebarCollapsed ? <ChevronsRight className="h-4 w-4"/> : <ChevronsLeft className="h-4 w-4"/>}
+              </Button>
+            </div>
+            <div className="space-y-2 mt-3">
+              {!sidebarCollapsed && <div className="text-[11px] uppercase text-muted-foreground px-1">Navigation</div>}
+              <NavItem id="chat" icon={MessageSquare} label="Chat" />
+              <NavItem id="documents" icon={FileText} label="Documents" />
+              <NavItem id="settings" icon={Settings} label="Settings" />
+            </div>
+          </div>
+          {!sidebarCollapsed && (
+            <div className="px-4 py-3 border-t flex-1 min-h-0 flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">Conversations</div>
+                <div className="flex items-center gap-2">
+                  <input ref={importRef} className="hidden" type="file" accept=".json" onChange={onImportConversations} />
+                  <Button variant="outline" size="sm" onClick={() => importRef.current?.click()}>Import</Button>
+                  <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><Download className="mr-2 h-4 w-4" />Export</Button>
+                </div>
+              </div>
+              <div className="relative">
+                <Input
+                  value={convQuery}
+                  onChange={(e)=>setConvQuery(e.target.value)}
+                  placeholder="Search conversations"
+                  className="pl-8 h-9"
+                />
+                <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="space-y-2">
+                  {filteredConversations.length === 0 ? (
+                    <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
+                  ) : (
+                    filteredConversations.map((conv) => (
+                      <div key={conv.id} className={cn("group flex items-center justify-between gap-2 p-2 rounded-md border", selectedConvId === conv.id && "ring-1 ring-primary")}
+                        onMouseEnter={()=> setSelectedConvId(conv.id)}
+                      >
+                        {editingId === conv.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input
+                              value={editingValue}
+                              onChange={(e)=>setEditingValue(e.target.value)}
+                              className="h-8"
+                              autoFocus
+                              onFocus={(e)=> e.target.select()}
+                            />
+                            <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={()=>setEditingId(null)} title="Cancel">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setSelectedConvId(conv.id); }}>
+                            <div className="text-sm font-medium truncate">{conv.title}</div>
+                            <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
+                          </button>
+                        )}
+                        {editingId !== conv.id && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <TooltipProvider delayDuration={100}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={()=>{ setEditingId(conv.id); setEditingValue(conv.title); }}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Rename</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider delayDuration={100}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={()=>onExportConversation(conv)}>
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Export</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider delayDuration={100}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={()=>onDeleteConversation(conv.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main area with header */}
+      <div className="h-full min-h-0 flex flex-col">
+        <div className="border-b bg-card px-4 py-3 flex items-center gap-2">
           <button className="md:hidden mr-auto" onClick={() => setMobileOpen(true)} aria-label="Open menu">
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
@@ -151,208 +266,13 @@ export default function RevampLayout({
                   <SheetTitle>Model Settings</SheetTitle>
                 </SheetHeader>
                 <div className="mt-4">
-                  {/* Reuse existing settings component */}
                   <ModelSettings currentSettings={modelSettings} onSave={onUpdateModelSettings} />
                 </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
-      </div>
-
-      {/* Body */}
-      <div className={cn("grid grid-cols-1 h-full min-h-0 overflow-hidden md:grid-cols-[300px_1fr]", sidebarCollapsed && "md:grid-cols-[72px_1fr]") }>
-        {/* Sidebar (desktop) */}
-        <div className="border-r bg-background hidden md:flex h-full">
-          <div className="h-full w-full flex flex-col">
-            <div className="p-3 border-b">
-              <div className="flex items-center justify-between">
-                {sidebarCollapsed ? (
-                  <div className="text-base font-semibold">DQ</div>
-                ) : (
-                  <div className="text-lg font-semibold">DocQueryAI</div>
-                )}
-                <Button variant="ghost" size="icon" onClick={()=>setSidebarCollapsed(!sidebarCollapsed)} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
-                  {sidebarCollapsed ? <ChevronsRight className="h-4 w-4"/> : <ChevronsLeft className="h-4 w-4"/>}
-                </Button>
-              </div>
-              <div className="space-y-2 mt-3">
-                {!sidebarCollapsed && <div className="text-[11px] uppercase text-muted-foreground px-1">Navigation</div>}
-                <NavItem id="chat" icon={MessageSquare} label="Chat" />
-                <NavItem id="documents" icon={FileText} label="Documents" />
-                <NavItem id="settings" icon={Settings} label="Settings" />
-              </div>
-            </div>
-            {!sidebarCollapsed && (
-              <div className="px-4 py-3 border-t flex-1 min-h-0 flex flex-col space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Conversations</div>
-                  <div className="flex items-center gap-2">
-                    <input ref={importRef} className="hidden" type="file" accept=".json" onChange={onImportConversations} />
-                    <Button variant="outline" size="sm" onClick={() => importRef.current?.click()}>Import</Button>
-                    <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><Download className="mr-2 h-4 w-4" />Export</Button>
-                  </div>
-                </div>
-                <div className="relative">
-                  <Input
-                    value={convQuery}
-                    onChange={(e)=>setConvQuery(e.target.value)}
-                    placeholder="Search conversations"
-                    className="pl-8 h-9"
-                  />
-                  <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                </div>
-                <ScrollArea className="flex-1 min-h-0">
-                  <div className="space-y-2">
-                    {filteredConversations.length === 0 ? (
-                      <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
-                    ) : (
-                      filteredConversations.map((conv) => (
-                        <div key={conv.id} className={cn("group flex items-center justify-between gap-2 p-2 rounded-md border", selectedConvId === conv.id && "ring-1 ring-primary")}
-                          onMouseEnter={()=> setSelectedConvId(conv.id)}
-                        >
-                          {editingId === conv.id ? (
-                            <div className="flex-1 flex items-center gap-2">
-                              <Input
-                                value={editingValue}
-                                onChange={(e)=>setEditingValue(e.target.value)}
-                                className="h-8"
-                                autoFocus
-                                onFocus={(e)=> e.target.select()}
-                              />
-                              <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" onClick={()=>setEditingId(null)} title="Cancel">
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setSelectedConvId(conv.id); }}>
-                              <div className="text-sm font-medium truncate">{conv.title}</div>
-                              <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
-                            </button>
-                          )}
-                          {editingId !== conv.id && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={()=>{ setEditingId(conv.id); setEditingValue(conv.title); }}>
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Rename</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={()=>onExportConversation(conv)}>
-                                      <Download className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Export</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={()=>onDeleteConversation(conv.id)}>
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Delete</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* Sidebar (mobile) */}
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent side="left">
-            <SheetHeader>
-              <SheetTitle>DocQueryAI</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-3">
-              <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
-              <NavItem id="chat" icon={MessageSquare} label="Chat" />
-              <NavItem id="documents" icon={FileText} label="Documents" />
-              <NavItem id="settings" icon={Settings} label="Settings" />
-              <div className="pt-4 border-t" />
-              <div className="text-xs uppercase text-muted-foreground px-1">Conversations</div>
-              <div className="relative mt-1">
-                <Input
-                  value={convQuery}
-                  onChange={(e)=>setConvQuery(e.target.value)}
-                  placeholder="Search conversations"
-                  className="pl-8 h-9"
-                />
-                <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              </div>
-              <ScrollArea className="h-64 mt-2">
-                <div className="space-y-2">
-                  {filteredConversations.length === 0 ? (
-                    <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
-                  ) : (
-                    filteredConversations.map((conv) => (
-                      <div key={conv.id} className={cn("flex items-center justify-between gap-2 p-2 rounded-md border", selectedConvId === conv.id && "ring-1 ring-primary")}
-                        onMouseEnter={()=> setSelectedConvId(conv.id)}
-                      >
-                        {editingId === conv.id ? (
-                          <div className="flex-1 flex items-center gap-2">
-                            <Input
-                              value={editingValue}
-                              onChange={(e)=>setEditingValue(e.target.value)}
-                              className="h-8"
-                              autoFocus
-                              onFocus={(e)=> e.target.select()}
-                            />
-                            <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="ghost" onClick={()=>setEditingId(null)} title="Cancel">
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); setSelectedConvId(conv.id); }}>
-                            <div className="text-sm font-medium truncate">{conv.title}</div>
-                            <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
-                          </button>
-                        )}
-                        {editingId !== conv.id && (
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" onClick={()=>{ setEditingId(conv.id); setEditingValue(conv.title); }}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={()=>onExportConversation(conv)}>
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={()=>onDeleteConversation(conv.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        {/* Main content */}
-        <div className="h-full">
+        <div className="flex-1 min-h-0">
           {activeTab === 'documents' && (
             <div className="h-full grid grid-rows-[auto_1fr]">
               <div className="p-4 border-b">
@@ -456,6 +376,81 @@ export default function RevampLayout({
           )}
         </div>
       </div>
+
+      {/* Sidebar (mobile) */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left">
+          <SheetHeader>
+            <SheetTitle>DocQueryAI</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-3">
+            <div className="text-xs uppercase text-muted-foreground px-1">Navigation</div>
+            <NavItem id="chat" icon={MessageSquare} label="Chat" />
+            <NavItem id="documents" icon={FileText} label="Documents" />
+            <NavItem id="settings" icon={Settings} label="Settings" />
+            <div className="pt-4 border-t" />
+            <div className="text-xs uppercase text-muted-foreground px-1">Conversations</div>
+            <div className="relative mt-1">
+              <Input
+                value={convQuery}
+                onChange={(e)=>setConvQuery(e.target.value)}
+                placeholder="Search conversations"
+                className="pl-8 h-9"
+              />
+              <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            </div>
+            <ScrollArea className="h-64 mt-2">
+              <div className="space-y-2">
+                {filteredConversations.length === 0 ? (
+                  <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
+                ) : (
+                  filteredConversations.map((conv) => (
+                    <div key={conv.id} className={cn("flex items-center justify-between gap-2 p-2 rounded-md border", selectedConvId === conv.id && "ring-1 ring-primary")}
+                      onMouseEnter={()=> setSelectedConvId(conv.id)}
+                    >
+                      {editingId === conv.id ? (
+                        <div className="flex-1 flex items-center gap-2">
+                          <Input
+                            value={editingValue}
+                            onChange={(e)=>setEditingValue(e.target.value)}
+                            className="h-8"
+                            autoFocus
+                            onFocus={(e)=> e.target.select()}
+                          />
+                          <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={()=>setEditingId(null)} title="Cancel">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); setSelectedConvId(conv.id); }}>
+                          <div className="text-sm font-medium truncate">{conv.title}</div>
+                          <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
+                        </button>
+                      )}
+                      {editingId !== conv.id && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={()=>{ setEditingId(conv.id); setEditingValue(conv.title); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={()=>onExportConversation(conv)}>
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={()=>onDeleteConversation(conv.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
