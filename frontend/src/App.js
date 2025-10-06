@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Sidebar from './components/Sidebar';
-import ChatInterface from './components/ChatInterface';
 import SaveConversationModal from './components/SaveConversationModal';
-import './App.css';
+import RevampLayout from './components/RevampLayout';
+import './index.css';
 
 // Make sure this matches your backend URL and port
 const API_URL = 'http://localhost:5001/api';
@@ -429,35 +428,33 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      {notification && <div className="notification">{notification}</div>}
-      <Sidebar 
-        documents={documents} 
+    <div className="h-screen">
+      {notification && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-md bg-secondary text-secondary-foreground px-4 py-2 shadow">
+          {notification}
+        </div>
+      )}
+      <RevampLayout
+        documents={documents}
         selectedDocument={selectedDocument}
+        messages={messages}
+        loading={loading}
+        chatMode={chatMode}
+        modelSettings={modelSettings}
+        savedConversations={savedConversations}
         onSelectDocument={setSelectedDocument}
         onUpload={handleDocumentUpload}
-        loading={loading}
-        savedConversations={savedConversations}
+        onClearDocuments={clearDocuments}
+        onSendMessage={sendMessage}
+        onToggleMode={toggleChatMode}
+        onNewChat={startNewChat}
+        onUpdateModelSettings={setModelSettings}
         onLoadConversation={loadConversation}
         onDeleteConversation={deleteConversation}
         onExportConversation={exportConversation}
         onExportAllConversations={exportAllConversations}
         onImportConversations={importConversations}
-        onClearDocuments={clearDocuments}
       />
-      
-      <ChatInterface 
-        messages={messages}
-        onSendMessage={sendMessage}
-        loading={loading}
-        chatMode={chatMode}
-        onToggleMode={toggleChatMode}
-        onSaveConversation={() => setSaveModalOpen(true)}
-        onNewChat={startNewChat}
-        modelSettings={modelSettings}
-        onUpdateModelSettings={setModelSettings}
-      />
-      
       <SaveConversationModal
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}

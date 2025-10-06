@@ -8,8 +8,8 @@ RUN apk add --no-cache wget
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (prefer clean CI install; fallback to install when lock mismatch)
+RUN npm ci || npm install --legacy-peer-deps
 
 # Copy the rest of the app
 COPY . .
