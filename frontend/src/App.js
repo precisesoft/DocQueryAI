@@ -280,6 +280,13 @@ function App() {
     localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
   };
 
+  // Rename a saved conversation
+  const renameConversation = (id, title) => {
+    const updated = savedConversations.map(conv => conv.id === id ? { ...conv, title } : conv);
+    setSavedConversations(updated);
+    localStorage.setItem('savedConversations', JSON.stringify(updated));
+  };
+
   // Export a single conversation as a JSON file
   const exportConversation = (conversation) => {
     const dataStr = JSON.stringify(conversation, null, 2);
@@ -452,6 +459,7 @@ function App() {
         onUpdateModelSettings={setModelSettings}
         onLoadConversation={loadConversation}
         onDeleteConversation={deleteConversation}
+        onRenameConversation={renameConversation}
         onExportConversation={exportConversation}
         onExportAllConversations={exportAllConversations}
         onImportConversations={importConversations}

@@ -7,11 +7,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui
 import { cn } from '../lib/utils';
 import MessageBubble from './MessageBubble';
 import ModelSettings from './ModelSettings';
-import { FiUpload, FiTrash2, FiDownload } from 'react-icons/fi';
-import { Moon, Sun, MessageSquare, FileText, Settings, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Moon, Sun, MessageSquare, FileText, Settings, ChevronsLeft, ChevronsRight, Upload, Trash2, Download, Pencil, Check, X } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
+import { Input } from './ui/input';
 
 export default function RevampLayout({
   // state
@@ -33,6 +33,7 @@ export default function RevampLayout({
   onUpdateModelSettings,
   onLoadConversation,
   onDeleteConversation,
+  onRenameConversation,
   onExportConversation,
   onExportAllConversations,
   onImportConversations,
@@ -55,6 +56,8 @@ export default function RevampLayout({
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [editingId, setEditingId] = React.useState(null);
+  const [editingValue, setEditingValue] = React.useState('');
 
   const NavItem = ({ id, icon: Icon, label }) => {
     const btn = (
@@ -149,7 +152,7 @@ export default function RevampLayout({
                   <div className="flex items-center gap-2">
                     <input ref={importRef} className="hidden" type="file" accept=".json" onChange={onImportConversations} />
                     <Button variant="outline" size="sm" onClick={() => importRef.current?.click()}>Import</Button>
-                    <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><FiDownload className="mr-2" />Export</Button>
+                    <Button variant="outline" size="sm" onClick={onExportAllConversations} disabled={!savedConversations.length}><Download className="mr-2 h-4 w-4" />Export</Button>
                   </div>
                 </div>
                 <ScrollArea className="h-48">
@@ -158,15 +161,57 @@ export default function RevampLayout({
                       <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
                     ) : (
                       savedConversations.map((conv) => (
-                        <div key={conv.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
-                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); }}>
-                            <div className="text-sm font-medium truncate">{conv.title}</div>
-                            <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
-                          </button>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={()=>onExportConversation(conv)}><FiDownload /></Button>
-                            <Button variant="destructive" size="sm" onClick={()=>onDeleteConversation(conv.id)}><FiTrash2 /></Button>
-                          </div>
+                        <div key={conv.id} className="group flex items-center justify-between gap-2 p-2 rounded-md border">
+                          {editingId === conv.id ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input value={editingValue} onChange={(e)=>setEditingValue(e.target.value)} className="h-8" />
+                              <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={()=>setEditingId(null)} title="Cancel">
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); }}>
+                              <div className="text-sm font-medium truncate">{conv.title}</div>
+                              <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
+                            </button>
+                          )}
+                          {editingId !== conv.id && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={()=>{ setEditingId(conv.id); setEditingValue(conv.title); }}>
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Rename</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={()=>onExportConversation(conv)}>
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Export</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={()=>onDeleteConversation(conv.id)}>
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
@@ -195,10 +240,37 @@ export default function RevampLayout({
                     <div className="text-xs text-muted-foreground px-2">No saved conversations.</div>
                   ) : (
                     savedConversations.map((conv) => (
-                      <button key={conv.id} className="w-full text-left p-2 rounded-md border" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); }}>
-                        <div className="text-sm font-medium truncate">{conv.title}</div>
-                        <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
-                      </button>
+                      <div key={conv.id} className="flex items-center justify-between gap-2 p-2 rounded-md border">
+                        {editingId === conv.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <Input value={editingValue} onChange={(e)=>setEditingValue(e.target.value)} className="h-8" />
+                            <Button size="icon" variant="secondary" onClick={()=>{ const v = editingValue.trim(); if (v) onRenameConversation(conv.id, v); setEditingId(null); }} title="Save">
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={()=>setEditingId(null)} title="Cancel">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <button className="flex-1 text-left" onClick={() => { onLoadConversation(conv); onChangeTab('chat'); setMobileOpen(false); }}>
+                            <div className="text-sm font-medium truncate">{conv.title}</div>
+                            <div className="text-[11px] text-muted-foreground">{new Date(conv.timestamp).toLocaleString()}</div>
+                          </button>
+                        )}
+                        {editingId !== conv.id && (
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={()=>{ setEditingId(conv.id); setEditingValue(conv.title); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={()=>onExportConversation(conv)}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={()=>onDeleteConversation(conv.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     ))
                   )}
                 </div>
@@ -220,10 +292,10 @@ export default function RevampLayout({
                     <div className="flex items-center gap-2">
                       <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt" onChange={(e)=>e.target.files[0] && onUpload(e.target.files[0])} />
                       <Button onClick={() => fileRef.current?.click()} disabled={loading}>
-                        <FiUpload className="mr-2" /> {loading ? 'Uploading...' : 'Choose File'}
+                        <Upload className="mr-2 h-4 w-4" /> {loading ? 'Uploading...' : 'Choose File'}
                       </Button>
                       <Button variant="outline" onClick={onClearDocuments} disabled={!documents.length}>
-                        <FiTrash2 className="mr-2" /> Clear All
+                        <Trash2 className="mr-2 h-4 w-4" /> Clear All
                       </Button>
                     </div>
                   </CardContent>
