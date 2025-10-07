@@ -43,7 +43,7 @@ function MessageBubble({ message, sender, streaming }) {
             )}
           </div>
         )}
-        <div className={`px-3 py-2 ${bubbleClass}`}>
+        <div className={`px-2 py-2 ${bubbleClass}`}>
           {isUser ? (
             <div className="whitespace-pre-wrap break-words">{parsedContent.visible}</div>
           ) : (

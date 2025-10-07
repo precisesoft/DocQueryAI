@@ -350,7 +350,7 @@ export default function RevampLayout({
 
           {activeTab === 'chat' && (
             <div className="h-full grid grid-rows-[1fr_auto]">
-              <ScrollArea className="p-4">
+              <ScrollArea className="py-4 px-2">
                 <div className="max-w-3xl mx-auto space-y-2">
                   {messages.map((m) => (
                     <MessageBubble key={m.id} message={m.text} sender={m.sender} streaming={m.streaming} />
@@ -362,7 +362,13 @@ export default function RevampLayout({
                   <Textarea
                     value={input}
                     onChange={(e)=>setInput(e.target.value)}
-                    placeholder={chatMode === 'document' ? 'Ask about your document…' : 'Ask anything…'}
+                    onKeyDown={(e)=>{
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder={chatMode === 'document' ? 'Ask about your document… (Enter to send, Shift+Enter for newline)' : 'Ask anything… (Enter to send, Shift+Enter for newline)'}
                     className="min-h-[56px]"
                   />
                   <Button type="submit" disabled={loading || !input.trim()}>Send</Button>
