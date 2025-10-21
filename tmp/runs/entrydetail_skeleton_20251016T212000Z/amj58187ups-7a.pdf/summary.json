@@ -1,0 +1,15 @@
+{
+  "status_code": 200,
+  "elapsed_sec": 725.8766074180603,
+  "ok": true,
+  "error": null,
+  "job_id": "02fe85ab-69e5-4b5c-aaf4-66e9b6c50fc2",
+  "model": "gemma3:12b",
+  "done": true,
+  "done_reason": "stop",
+  "local_validation": {
+    "schema_ok": true,
+    "missing_required": [],
+    "warnings": []
+  }
+}

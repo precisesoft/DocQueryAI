@@ -1,0 +1,33 @@
+{
+  "schema": "# Will be injected as JSON Schema (same as tmp/contracts/shipping_label.v1.schema.json)",
+  "contract": {
+    "schema_id": "shipping_label",
+    "schema_version": "1.0",
+    "agent_version": "draft-1",
+    "model": "gemma3:12b",
+    "generated_at": "",
+    "job_id": "",
+    "doc": {
+      "filename": "",
+      "sha256": "",
+      "page_count": 1
+    },
+    "fields": {
+      "carrier": {"value": null, "confidence": 0.0, "evidence": []},
+      "service_level": {"value": null, "confidence": 0.0, "evidence": []},
+      "tracking_number": {"value": null, "confidence": 0.0, "evidence": []},
+      "shipment_date": {"value": null, "confidence": 0.0, "evidence": []},
+      "shipper_name": {"value": null, "confidence": 0.0, "evidence": []},
+      "shipper_address": {"value": null, "confidence": 0.0, "evidence": []},
+      "recipient_name": {"value": null, "confidence": 0.0, "evidence": []},
+      "recipient_address": {"value": null, "confidence": 0.0, "evidence": []},
+      "package_count": {"value": null, "confidence": 0.0, "evidence": []},
+      "weight": {"value": null, "confidence": 0.0, "evidence": []},
+      "dimensions": {"value": null, "confidence": 0.0, "evidence": []},
+      "reference_numbers": []
+    },
+    "overall_confidence": 0.0,
+    "validation": {"schema_ok": true, "missing_required": [], "warnings": []}
+  }
+}
+

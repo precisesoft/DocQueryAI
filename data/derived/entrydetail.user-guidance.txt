@@ -1,0 +1,28 @@
+Contract: EntryDetail v1
+
+Mapping guidance from constraints.txt
+- Defaults (use when missing):
+  entryTypeCode="67", operType="RG", mnlFileInd="Y", entrdThruPortId=1000,
+  mfgFirmFeiNum=1, prdctId=177487, productCode.{industryCode="01",classCode="U",groupCode="00",gpiCode="UN",productDesc="UNKNOWN",productId=177487},
+  totalQty=1.000 (min 1.000), unitOfMsrCode="LB" (Line), unitType="W",
+  valueGoodsAmt=0.01 (min 0.01), quantity[*].ntcInd="N",
+  address fallbacks: name/line1Adrs/cityName="UNKNOWN", stateCode/isoCntryCode="??", zipCode="00000" when patterns not met.
+
+- Required structure:
+  lines: ≥1 items; quantity: exactly 2 items per line (first with PK total pieces, second with LB/KG per-piece weight).
+  entryAddress: exactly 2 items; [0] exporter/shipper/return (entryAddrType="Return Addressee"), [1] consignee/recipient (entryAddrType null).
+
+- Formatting:
+  Dates: YYYY-MM-DD (today where constraints say "today’s date").
+  Numbers: totalQty 3 decimals; valueGoodsAmt 2 decimals.
+  Codes: ISO-2 uppercase; allow "??" fallback when unknown.
+
+- Validation expectations:
+  - Schema must pass.
+  - Business rules checked by a post-validator (counts, sequence, minima, unit consistency).
+
+Field sourcing (vision-only):
+- Use printed names/addresses for entryAddress mapping.
+- `pstlTrckngNum` may be present as text; if not clearly visible, set null (no barcode requirement).
+- Description/weight/value: use obvious text near “Description of Goods”, “Weight”, or “Value/Price”; otherwise apply defaults/minima.
+

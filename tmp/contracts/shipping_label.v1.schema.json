@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docquery.ai/contracts/shipping_label.v1.schema.json",
+  "title": "shipping_label",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "doc",
+    "fields"
+  ],
+  "properties": {
+    "schema_id": { "type": "string", "const": "shipping_label" },
+    "schema_version": { "type": "string", "const": "1.0" },
+    "agent_version": { "type": "string" },
+    "model": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "job_id": { "type": "string" },
+    "doc": {
+      "type": "object",
+      "required": ["filename", "page_count"],
+      "properties": {
+        "filename": { "type": "string" },
+        "sha256": { "type": "string" },
+        "page_count": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "carrier": { "$ref": "#/definitions/fieldString" },
+        "service_level": { "$ref": "#/definitions/fieldString" },
+        "tracking_number": { "$ref": "#/definitions/fieldString" },
+        "shipment_date": { "$ref": "#/definitions/fieldString" },
+        "shipper_name": { "$ref": "#/definitions/fieldString" },
+        "shipper_address": { "$ref": "#/definitions/fieldString" },
+        "recipient_name": { "$ref": "#/definitions/fieldString" },
+        "recipient_address": { "$ref": "#/definitions/fieldString" },
+        "package_count": { "$ref": "#/definitions/fieldNumber" },
+        "weight": { "$ref": "#/definitions/fieldNumber" },
+        "dimensions": { "$ref": "#/definitions/fieldString" },
+        "reference_numbers": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/fieldString" },
+          "maxItems": 5
+        }
+      },
+      "additionalProperties": false
+    },
+    "overall_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "schema_ok": { "type": "boolean" },
+        "missing_required": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["schema_ok"],
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "w": { "type": "number", "minimum": 0, "maximum": 1 },
+        "h": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["page", "bbox"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "bbox": { "$ref": "#/definitions/bbox" },
+        "snippet": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "fieldBase": {
+      "type": "object",
+      "required": ["value", "confidence", "evidence"],
+      "properties": {
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/evidence" },
+          "minItems": 0,
+          "maxItems": 3
+        },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "fieldString": {
+      "allOf": [
+        { "$ref": "#/definitions/fieldBase" },
+        {
+          "type": "object",
+          "properties": { "value": { "type": ["string", "null"] } }
+        }
+      ]
+    },
+    "fieldNumber": {
+      "allOf": [
+        { "$ref": "#/definitions/fieldBase" },
+        {
+          "type": "object",
+          "properties": { "value": { "type": ["number", "null"] } }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}
+

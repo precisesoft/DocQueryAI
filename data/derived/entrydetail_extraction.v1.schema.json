@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docquery.ai/contracts/entrydetail_extraction.v1.schema.json",
+  "title": "EntryDetailExtractionResult",
+  "type": "object",
+  "required": ["schema_id", "schema_version", "data", "meta"],
+  "properties": {
+    "schema_id": { "type": "string", "const": "EntryDetailExtraction" },
+    "schema_version": { "type": "string", "const": "1.0" },
+    "data": { "$ref": "./entrydetail.v1.schema.json" },
+    "meta": {
+      "type": "object",
+      "required": [
+        "agent_version",
+        "model",
+        "generated_at",
+        "job_id",
+        "overall_confidence",
+        "validation"
+      ],
+      "properties": {
+        "agent_version": { "type": "string" },
+        "model": { "type": "string" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "job_id": { "type": "string" },
+        "overall_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "field_confidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "confidence"],
+            "properties": {
+              "path": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "field_evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "evidence"],
+            "properties": {
+              "path": { "type": "string" },
+              "evidence": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 3,
+                "items": {
+                  "type": "object",
+                  "required": ["page", "bbox"],
+                  "properties": {
+                    "page": { "type": "integer", "minimum": 1 },
+                    "bbox": {
+                      "type": "object",
+                      "required": ["x", "y", "w", "h"],
+                      "properties": {
+                        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "y": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "w": { "type": "number", "minimum": 0, "maximum": 1 },
+                        "h": { "type": "number", "minimum": 0, "maximum": 1 }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "validation": {
+          "type": "object",
+          "required": ["schema_ok"],
+          "properties": {
+            "schema_ok": { "type": "boolean" },
+            "missing_required": { "type": "array", "items": { "type": "string" } },
+            "warnings": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

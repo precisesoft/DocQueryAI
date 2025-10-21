@@ -1,0 +1,71 @@
+{
+  "schema_id": "EntryDetailExtraction",
+  "schema_version": "1.0",
+  "data": {
+    "entryHeader": {
+      "entryTypeCode": "67",
+      "operType": "RG",
+      "mnlFileInd": "Y",
+      "entrdThruPortId": 1000,
+      "mfgFirmFeiNum": 1,
+      "prdctId": 177487,
+      "product": {
+        "industryCode": "01",
+        "classCode": "U",
+        "groupCode": "00",
+        "gpiCode": "UN",
+        "productDesc": "UNKNOWN",
+        "productId": 177487
+      },
+      "entryDate": "2025-10-16"
+    },
+    "lines": [
+      {
+        "description": "CANADA BREAKERS",
+        "quantity": [
+          {
+            "quantityValue": 2,
+            "unitOfMsrCode": "PK"
+          },
+          {
+            "quantityValue": 85.0,
+            "unitOfMsrCode": "LB"
+          }
+        ],
+        "valueGoodsAmt": 0.01
+      }
+    ],
+    "entryAddress": [
+      {
+        "entryAddrType": "Return Addressee",
+        "name": "REACTION SUPPLY CO",
+        "line1Adrs": "UNKNOWN",
+        "cityName": "UNKNOWN",
+        "stateCode": "??",
+        "isoCntryCode": "??",
+        "zipCode": "00000"
+      },
+      {
+        "entryAddrType": null,
+        "name": "IMPORTER/CONSIGNEE",
+        "line1Adrs": "UNKNOWN",
+        "cityName": "UNKNOWN",
+        "stateCode": "??",
+        "isoCntryCode": "??",
+        "zipCode": "00000"
+      }
+    ]
+  },
+  "meta": {
+    "agent_version": "v1",
+    "model": "gemma3:12b",
+    "generated_at": "2025-10-16T20:45:44.766378+00:00",
+    "job_id": "87e199a5-6501-4b10-afb7-c1c565053fd8",
+    "overall_confidence": 0.8,
+    "validation": {
+      "schema_ok": true,
+      "missing_required": [],
+      "warnings": []
+    }
+  }
+}

@@ -71,3 +71,11 @@
 html, body, #root { height: 100%; }
 body { @apply bg-background text-foreground antialiased overflow-hidden; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+
+/* Chat content safety: prevent overflow and allow wrapping */
+.prose { word-break: break-word; overflow-wrap: anywhere; }
+.prose pre { max-width: 100%; overflow-x: auto; white-space: pre; }
+.prose code { word-break: break-word; overflow-wrap: anywhere; }
+
+/* Fix Radix ScrollArea viewport wrapper forcing min-width:100% and display:table */
+[data-radix-scroll-area-viewport] > div { min-width: 0 !important; display: block !important; }

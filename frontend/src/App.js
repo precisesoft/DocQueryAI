@@ -3,12 +3,13 @@ import axios from 'axios';
 import RevampLayout from './components/RevampLayout';
 import './index.css';
 
-// Make sure this matches your backend URL and port
-const API_URL = 'http://localhost:5001/api';
+// Backend API base
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 function App() {
   // theme (dark mode)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [compact, setCompact] = useState(() => localStorage.getItem('compact') === 'true');
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
@@ -29,10 +30,15 @@ function App() {
   const [notification, setNotification] = useState(null);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'documents' | 'settings'
   const [modelSettings, setModelSettings] = useState({
-    model: 'phi3:mini',
+    model: 'gemma2:27b',
     temperature: 0.7,
     maxTokens: -1
   });
+
+  // persist compact mode
+  useEffect(() => {
+    localStorage.setItem('compact', String(compact));
+  }, [compact]);
 
   // Fetch documents on component mount
   useEffect(() => {
@@ -109,6 +115,33 @@ function App() {
       // Auto-select the uploaded document and switch to document mode
       setSelectedDocument(response.data.filename);
       setChatMode('document');
+      
+      // Queue an async extraction job for this file so it appears in Jobs dashboard
+      try {
+        const createResp = await fetch(`${API_URL}/jobs/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: response.data.filename,
+            max_pages: 2,
+            scale: 1.6,
+            model: modelSettings.model || 'gemma3:12b',
+            agent_version: 'v1'
+          })
+        });
+        const createJson = await createResp.json();
+        if (createResp.ok) {
+          setMessages(prev => [...prev, { 
+            id: prev.length + 1, 
+            text: `🧾 Extraction job queued: ${createJson.job_id}. Track it in the Jobs tab.`, 
+            sender: "bot" 
+          }]);
+        } else {
+          setMessages(prev => [...prev, { id: prev.length + 1, text: `⚠️ Job queue error: ${createJson.error || createResp.status}`, sender: 'bot' }]);
+        }
+      } catch (e) {
+        console.error('Job create error', e);
+      }
       
     } catch (error) {
       console.error('Error uploading document:', error);
@@ -462,9 +495,37 @@ function App() {
         onRenameConversation={renameConversation}
         onExportConversation={exportConversation}
         onExportAllConversations={exportAllConversations}
-        onImportConversations={importConversations}
-        theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      onImportConversations={importConversations}
+      onRunJob={async (filename)=>{
+        try {
+          setLoading(true);
+          const resp = await fetch(`${API_URL}/jobs/create`, { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({
+              filename,
+              max_pages: 2,
+              scale: 1.6,
+              model: modelSettings.model || 'gemma3:12b',
+              agent_version: 'v1'
+            })
+          });
+          const json = await resp.json();
+          if (!resp.ok) throw new Error(json?.error || `HTTP ${resp.status}`);
+          localStorage.setItem('latestJobId', json.job_id);
+          setMessages(prev => [...prev, { id: prev.length + 1, sender: 'bot', text: `🧾 Extraction job queued: ${json.job_id}. Open Shipment Data Extractor to view status.` }]);
+          setActiveTab('extractor');
+        } catch (e) {
+          setMessages(prev => [...prev, { id: prev.length + 1, sender:'bot', text: `Job error: ${e.message}`}]);
+          setActiveTab('extractor');
+        } finally {
+          setLoading(false);
+        }
+      }}
+      theme={theme}
+      onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      compact={compact}
+      onToggleCompact={() => setCompact((c) => !c)}
       />
     </div>
   );

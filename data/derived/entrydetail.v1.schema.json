@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docquery.ai/contracts/entrydetail.v1.schema.json",
+  "title": "EntryDetail",
+  "type": "object",
+  "required": [
+    "entryTypeCode",
+    "operType",
+    "mnlFileInd",
+    "entrdThruPortId",
+    "sbmsnDate",
+    "lines",
+    "entryAddress",
+    "uspsContentReviewedAcceptedFlag"
+  ],
+  "properties": {
+    "entryTypeCode": { "type": "string", "maxLength": 3, "default": "67" },
+    "operType": { "type": "string", "maxLength": 10, "default": "RG" },
+    "pstlTrckngNum": { "type": ["string", "null"], "maxLength": 25 },
+    "mnlFileInd": { "type": "string", "maxLength": 1, "default": "Y" },
+    "entrdThruPortId": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0, "maximum": 9999999 },
+        { "type": "string", "pattern": "^\\d{1,7}$" }
+      ],
+      "default": 1000
+    },
+    "sbmsnDate": { "type": "string", "format": "date" },
+
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "lineNum",
+          "imprtrPrdctDescText",
+          "isoCntryCode",
+          "lctnRmrksText",
+          "mfgFirmFeiNum",
+          "prdctId",
+          "smplAvlbltyDate",
+          "totalQty",
+          "unitOfMsrCode",
+          "unitType",
+          "valueGoodsAmt",
+          "isAbvEntry",
+          "productCode",
+          "quantity"
+        ],
+        "properties": {
+          "lineNum": { "type": "integer", "minimum": 1, "maximum": 9999 },
+          "imprtrPrdctDescText": { "type": "string", "maxLength": 240 },
+          "isoCntryCode": { "type": "string", "maxLength": 2, "pattern": "^[A-Z]{2}|\u003f\u003f$", "default": "??" },
+          "lctnRmrksText": { "type": "string", "maxLength": 240 },
+          "mfgFirmFeiNum": {
+            "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "pattern": "^\\d{1,10}$" } ],
+            "default": 1
+          },
+          "prdctId": {
+            "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "pattern": "^\\d{1,10}$" } ],
+            "default": 177487
+          },
+          "smplAvlbltyDate": { "type": "string", "format": "date" },
+          "totalQty": { "type": "number", "minimum": 1.0, "multipleOf": 0.001, "default": 1.0 },
+          "unitOfMsrCode": { "type": "string", "maxLength": 4, "enum": ["LB", "KG"], "default": "LB" },
+          "unitType": { "type": "string", "maxLength": 1, "default": "W" },
+          "valueGoodsAmt": { "type": "number", "minimum": 0.01, "multipleOf": 0.01, "default": 0.01 },
+          "isAbvEntry": { "type": "boolean", "default": true },
+
+          "productCode": {
+            "type": "object",
+            "required": ["industryCode", "classCode", "groupCode", "gpiCode", "productDesc", "productId"],
+            "properties": {
+              "industryCode": { "type": "string", "maxLength": 2, "default": "01" },
+              "classCode": { "type": "string", "maxLength": 1, "default": "U" },
+              "groupCode": { "type": "string", "maxLength": 2, "default": "00" },
+              "gpiCode": { "type": "string", "maxLength": 2, "default": "UN" },
+              "productDesc": { "type": "string", "maxLength": 100, "default": "UNKNOWN" },
+              "productId": {
+                "oneOf": [ { "type": "integer", "minimum": 0 }, { "type": "string", "pattern": "^\\d{1,10}$" } ],
+                "default": 177487
+              }
+            },
+            "additionalProperties": false
+          },
+
+          "quantity": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["displayOrderId", "unitOfMsrCode", "unitsQty", "ntcInd"],
+              "properties": {
+                "displayOrderId": { "type": ["integer", "number"], "minimum": 1, "maximum": 999 },
+                "unitOfMsrCode": { "type": "string", "maxLength": 4, "enum": ["PK", "LB", "KG"] },
+                "unitsQty": { "type": "number", "minimum": 0.0, "multipleOf": 0.001, "default": 1.0 },
+                "ntcInd": { "type": "string", "maxLength": 1, "default": "N" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "entryAddress": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["name", "line1Adrs", "cityName", "stateCode", "zipCode", "isoCntryCode"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 200, "default": "UNKNOWN" },
+          "line1Adrs": { "type": "string", "maxLength": 110, "default": "UNKNOWN" },
+          "line2Adrs": { "type": ["string", "null"], "maxLength": 110 },
+          "cityName": { "type": "string", "maxLength": 100, "default": "UNKNOWN" },
+          "stateCode": { "type": "string", "maxLength": 2, "pattern": "^[A-Z]{2}|\u003f\u003f$", "default": "??" },
+          "zipCode": { "type": "string", "maxLength": 15, "pattern": "^(\\d{5}|\\d{5}-\\d{4})$", "default": "00000" },
+          "isoCntryCode": { "type": "string", "maxLength": 2, "pattern": "^[A-Z]{2}|\u003f\u003f$", "default": "??" },
+          "entryAddrType": { "type": ["string", "null"], "maxLength": 240 }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "uspsContentReviewedAcceptedFlag": { "type": "boolean", "default": false }
+  },
+  "additionalProperties": false
+}
+

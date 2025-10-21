@@ -1,0 +1,22 @@
+{
+  "status_code": 200,
+  "elapsed_sec": 395.0269777774811,
+  "ok": true,
+  "error": null,
+  "job_id": "4e190c9b-88d2-41c0-8454-9c91f3be9d09",
+  "model": "gemma3:12b",
+  "done": true,
+  "done_reason": "stop",
+  "local_validation": {
+    "schema_ok": false,
+    "missing_required": [
+      "entryTypeCode",
+      "operType",
+      "mnlFileInd",
+      "entrdThruPortId",
+      "sbmsnDate",
+      "uspsContentReviewedAcceptedFlag"
+    ],
+    "warnings": []
+  }
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import CodeBlock from './CodeBlock';
 
-function MessageBubble({ message, sender, streaming }) {
+function MessageBubble({ message, sender, streaming, compact = false }) {
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const [parsedContent, setParsedContent] = useState({ thinking: '', visible: '' });
 
@@ -28,8 +28,8 @@ function MessageBubble({ message, sender, streaming }) {
     : 'bg-muted text-foreground rounded-2xl rounded-bl-md';
 
   return (
-    <div className={`w-full flex ${containerClass}`}>
-      <div className="max-w-[75%]">
+    <div className={`w-full flex ${containerClass} px-0.5`}>
+      <div className="w-fit max-w-[95%] md:max-w-[80%] lg:max-w-[70%]">
         {parsedContent.thinking && (
           <div className="mb-2">
             <button
@@ -43,11 +43,11 @@ function MessageBubble({ message, sender, streaming }) {
             )}
           </div>
         )}
-        <div className={`px-2 py-2 ${bubbleClass}`}>
+        <div className={`${compact ? 'px-2 py-1.5' : 'px-2 py-2'} ${bubbleClass} overflow-hidden`}> 
           {isUser ? (
-            <div className="whitespace-pre-wrap break-words">{parsedContent.visible}</div>
+            <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{parsedContent.visible}</div>
           ) : (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
+            <div className="prose prose-sm dark:prose-invert max-w-none break-words [overflow-wrap:anywhere]">
               <ReactMarkdown
                 components={{
                   code({node, inline, className, children, ...props}) {

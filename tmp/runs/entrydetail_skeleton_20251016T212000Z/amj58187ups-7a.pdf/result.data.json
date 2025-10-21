@@ -1,0 +1,69 @@
+{
+  "entryTypeCode": "67",
+  "operType": "RG",
+  "pstlTrckngNum": null,
+  "mnlFileInd": "Y",
+  "entrdThruPortId": 1000,
+  "sbmsnDate": "2025-10-16",
+  "lines": [
+    {
+      "lineNum": 1,
+      "imprtrPrdctDescText": "UNKNOWN",
+      "isoCntryCode": "??",
+      "lctnRmrksText": "manifest_file_record",
+      "mfgFirmFeiNum": 1,
+      "prdctId": 177487,
+      "smplAvlbltyDate": "2025-10-16",
+      "totalQty": 1.0,
+      "unitOfMsrCode": "LB",
+      "unitType": "W",
+      "valueGoodsAmt": 0.01,
+      "isAbvEntry": true,
+      "productCode": {
+        "industryCode": "01",
+        "classCode": "U",
+        "groupCode": "00",
+        "gpiCode": "UN",
+        "productDesc": "UNKNOWN",
+        "productId": 177487
+      },
+      "quantity": [
+        {
+          "displayOrderId": 1,
+          "unitOfMsrCode": "PK",
+          "unitsQty": 1.0,
+          "ntcInd": "N"
+        },
+        {
+          "displayOrderId": 2,
+          "unitOfMsrCode": "LB",
+          "unitsQty": 1.0,
+          "ntcInd": "N"
+        }
+      ]
+    }
+  ],
+  "entryAddress": [
+    {
+      "name": "UNKNOWN",
+      "line1Adrs": "UNKNOWN",
+      "line2Adrs": null,
+      "cityName": "UNKNOWN",
+      "stateCode": "??",
+      "zipCode": "00000",
+      "isoCntryCode": "??",
+      "entryAddrType": "Return Addressee"
+    },
+    {
+      "name": "UNKNOWN",
+      "line1Adrs": "UNKNOWN",
+      "line2Adrs": null,
+      "cityName": "UNKNOWN",
+      "stateCode": "??",
+      "zipCode": "00000",
+      "isoCntryCode": "??",
+      "entryAddrType": null
+    }
+  ],
+  "uspsContentReviewedAcceptedFlag": false
+}

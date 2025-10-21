@@ -5,7 +5,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 function ModelSettings({ onSave, currentSettings }) {
   const [models, setModels] = useState([]);

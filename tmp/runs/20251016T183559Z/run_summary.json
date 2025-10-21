@@ -1,0 +1,32 @@
+{
+  "DHL Generated Sample 01.pdf": {
+    "status_code": 200,
+    "elapsed_sec": 338.3784062862396,
+    "ok": true,
+    "error": null,
+    "model": "gemma3:12b",
+    "done": true,
+    "done_reason": "stop",
+    "parsed": true
+  },
+  "amj58187ups-7a.pdf": {
+    "status_code": 200,
+    "elapsed_sec": 241.91894721984863,
+    "ok": true,
+    "error": null,
+    "model": "gemma3:12b",
+    "done": true,
+    "done_reason": "stop",
+    "parsed": true
+  },
+  "AMJ64528UPS-4 cont..pdf": {
+    "status_code": 200,
+    "elapsed_sec": 240.12557792663574,
+    "ok": true,
+    "error": null,
+    "model": "gemma3:12b",
+    "done": true,
+    "done_reason": "stop",
+    "parsed": true
+  }
+}

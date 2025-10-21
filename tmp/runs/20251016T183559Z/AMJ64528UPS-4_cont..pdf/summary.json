@@ -1,0 +1,10 @@
+{
+  "status_code": 200,
+  "elapsed_sec": 240.12557792663574,
+  "ok": true,
+  "error": null,
+  "model": "gemma3:12b",
+  "done": true,
+  "done_reason": "stop",
+  "parsed": true
+}

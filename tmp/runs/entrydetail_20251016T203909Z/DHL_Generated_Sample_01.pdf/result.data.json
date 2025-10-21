@@ -1,0 +1,58 @@
+{
+  "entryHeader": {
+    "entryTypeCode": "67",
+    "operType": "RG",
+    "mnlFileInd": "Y",
+    "entrdThruPortId": 1000,
+    "mfgFirmFeiNum": 1,
+    "entryDate": "2025-10-16",
+    "product": {
+      "industryCode": "01",
+      "classCode": "U",
+      "groupCode": "00",
+      "gpiCode": "UN",
+      "productDesc": "UNKNOWN",
+      "productId": 177487
+    }
+  },
+  "entryAddress": [
+    {
+      "entryAddrType": "Return Addressee",
+      "name": "UNKNOWN",
+      "line1Adrs": "UNKNOWN",
+      "cityName": "UNKNOWN",
+      "stateCode": "??",
+      "isoCntryCode": "??",
+      "zipCode": "00000"
+    },
+    {
+      "entryAddrType": null,
+      "name": "UNKNOWN",
+      "line1Adrs": "UNKNOWN",
+      "cityName": "UNKNOWN",
+      "stateCode": "??",
+      "isoCntryCode": "??",
+      "zipCode": "00000"
+    }
+  ],
+  "lines": [
+    {
+      "descriptionOfGoods": "UNKNOWN",
+      "quantity": [
+        {
+          "value": 1,
+          "unitOfMsrCode": "PK"
+        },
+        {
+          "value": 1,
+          "unitOfMsrCode": "LB"
+        }
+      ],
+      "unitOfMsrCode": "LB"
+    }
+  ],
+  "total": {
+    "totalQty": 1.0,
+    "valueGoodsAmt": 0.01
+  }
+}

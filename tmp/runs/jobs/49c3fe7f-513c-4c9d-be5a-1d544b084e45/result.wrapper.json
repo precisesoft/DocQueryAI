@@ -1,0 +1,325 @@
+{
+  "schema_id": "EntryDetailExtraction",
+  "schema_version": "1.0",
+  "data": {
+    "entryTypeCode": "67",
+    "operType": "RG",
+    "pstlTrckngNum": null,
+    "mnlFileInd": "Y",
+    "entrdThruPortId": 1000,
+    "sbmsnDate": "2025-10-17",
+    "lines": [
+      {
+        "lineNum": 1,
+        "imprtrPrdctDescText": "UNKNOWN",
+        "isoCntryCode": "??",
+        "lctnRmrksText": "manifest_file_record",
+        "mfgFirmFeiNum": 1,
+        "prdctId": 177487,
+        "smplAvlbltyDate": "2025-10-17",
+        "totalQty": 1.0,
+        "unitOfMsrCode": "LB",
+        "unitType": "W",
+        "valueGoodsAmt": 0.01,
+        "isAbvEntry": true,
+        "productCode": {
+          "industryCode": "01",
+          "classCode": "U",
+          "groupCode": "00",
+          "gpiCode": "UN",
+          "productDesc": "UNKNOWN",
+          "productId": 177487
+        },
+        "quantity": [
+          {
+            "displayOrderId": 1,
+            "unitOfMsrCode": "PK",
+            "unitsQty": 1.0,
+            "ntcInd": "N"
+          },
+          {
+            "displayOrderId": 2,
+            "unitOfMsrCode": "LB",
+            "unitsQty": 1.0,
+            "ntcInd": "N"
+          }
+        ]
+      }
+    ],
+    "entryAddress": [
+      {
+        "name": "UNKNOWN",
+        "line1Adrs": "UNKNOWN",
+        "line2Adrs": null,
+        "cityName": "UNKNOWN",
+        "stateCode": "??",
+        "zipCode": "00000",
+        "isoCntryCode": "??",
+        "entryAddrType": "Return Addressee"
+      },
+      {
+        "name": "UNKNOWN",
+        "line1Adrs": "UNKNOWN",
+        "line2Adrs": null,
+        "cityName": "UNKNOWN",
+        "stateCode": "??",
+        "zipCode": "00000",
+        "isoCntryCode": "??",
+        "entryAddrType": null
+      }
+    ],
+    "uspsContentReviewedAcceptedFlag": false
+  },
+  "meta": {
+    "agent_version": "v1",
+    "model": "gemma3:12b",
+    "generated_at": "2025-10-17T16:28:58.482044+00:00",
+    "job_id": "4dd28be5-0950-4d4b-9bb8-800acfb8dcec",
+    "overall_confidence": 0.7,
+    "validation": {
+      "schema_ok": true,
+      "missing_required": [],
+      "warnings": [
+        "missing_evidence_count=45 (see meta.missing_evidence_paths)"
+      ]
+    },
+    "field_confidence": [
+      {
+        "path": "entryTypeCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "operType",
+        "confidence": 0.5
+      },
+      {
+        "path": "pstlTrckngNum",
+        "confidence": 0.5
+      },
+      {
+        "path": "mnlFileInd",
+        "confidence": 0.5
+      },
+      {
+        "path": "entrdThruPortId",
+        "confidence": 0.5
+      },
+      {
+        "path": "sbmsnDate",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].lineNum",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].imprtrPrdctDescText",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].isoCntryCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].lctnRmrksText",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].mfgFirmFeiNum",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].prdctId",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].smplAvlbltyDate",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].totalQty",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].unitOfMsrCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].unitType",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].valueGoodsAmt",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].isAbvEntry",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].productCode.industryCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].productCode.classCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].productCode.groupCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].productCode.gpiCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].productCode.productDesc",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].productCode.productId",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[0].displayOrderId",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[0].unitOfMsrCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[0].unitsQty",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[0].ntcInd",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[1].displayOrderId",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[1].unitOfMsrCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[1].unitsQty",
+        "confidence": 0.5
+      },
+      {
+        "path": "lines[0].quantity[1].ntcInd",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].name",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].line1Adrs",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].cityName",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].stateCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].zipCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].isoCntryCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[0].entryAddrType",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].name",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].line1Adrs",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].cityName",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].stateCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].zipCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].isoCntryCode",
+        "confidence": 0.5
+      },
+      {
+        "path": "entryAddress[1].entryAddrType",
+        "confidence": 0.5
+      },
+      {
+        "path": "uspsContentReviewedAcceptedFlag",
+        "confidence": 0.5
+      }
+    ],
+    "field_evidence": [],
+    "missing_evidence_paths": [
+      "entrdThruPortId",
+      "entryAddress[0].cityName",
+      "entryAddress[0].entryAddrType",
+      "entryAddress[0].isoCntryCode",
+      "entryAddress[0].line1Adrs",
+      "entryAddress[0].name",
+      "entryAddress[0].stateCode",
+      "entryAddress[0].zipCode",
+      "entryAddress[1].cityName",
+      "entryAddress[1].isoCntryCode",
+      "entryAddress[1].line1Adrs",
+      "entryAddress[1].name",
+      "entryAddress[1].stateCode",
+      "entryAddress[1].zipCode",
+      "entryTypeCode",
+      "lines[0].imprtrPrdctDescText",
+      "lines[0].isAbvEntry",
+      "lines[0].isoCntryCode",
+      "lines[0].lctnRmrksText",
+      "lines[0].lineNum",
+      "lines[0].mfgFirmFeiNum",
+      "lines[0].prdctId",
+      "lines[0].productCode.classCode",
+      "lines[0].productCode.gpiCode",
+      "lines[0].productCode.groupCode",
+      "lines[0].productCode.industryCode",
+      "lines[0].productCode.productDesc",
+      "lines[0].productCode.productId",
+      "lines[0].quantity[0].displayOrderId",
+      "lines[0].quantity[0].ntcInd",
+      "lines[0].quantity[0].unitOfMsrCode",
+      "lines[0].quantity[0].unitsQty",
+      "lines[0].quantity[1].displayOrderId",
+      "lines[0].quantity[1].ntcInd",
+      "lines[0].quantity[1].unitOfMsrCode",
+      "lines[0].quantity[1].unitsQty",
+      "lines[0].smplAvlbltyDate",
+      "lines[0].totalQty",
+      "lines[0].unitOfMsrCode",
+      "lines[0].unitType",
+      "lines[0].valueGoodsAmt",
+      "mnlFileInd",
+      "operType",
+      "sbmsnDate",
+      "uspsContentReviewedAcceptedFlag"
+    ]
+  }
+}
