@@ -4,3 +4,4 @@ package.json
 scan.png
 scanned_sample.pdf
 uploads/
+tmp/
