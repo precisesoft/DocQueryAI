@@ -10,7 +10,9 @@ from PyPDF2 import PdfReader
 import re
 import time
 import numpy as np
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+
+from providers.base import get_provider
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -25,12 +27,9 @@ app.config["UPLOAD_FOLDER"] = "./uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs("./documents", exist_ok=True)
 
-# API endpoints
-LLM_API_URL = "http://llm-service:1234/v1"  # Using Docker service name
-EMBEDDING_ENDPOINT = f"{LLM_API_URL}/embeddings"
-CHAT_ENDPOINT = f"{LLM_API_URL}/chat/completions"
-EMBEDDING_MODEL = "text-embedding-bge-m3"
-CHAT_MODEL = "deepseek-r1-distill-qwen-32b-mlx"
+# Default models (provider layer also has defaults)
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-m3")
+CHAT_MODEL = os.getenv("CHAT_MODEL", "gemma2:27b")
 
 # Store uploaded documents in memory
 document_store = {}
@@ -66,48 +65,22 @@ def read_pdf_file(file_path):
         logger.error(f"Error reading PDF file: {e}")
         return ""
 
-def get_embedding(text):
-    payload = {
-        "model": EMBEDDING_MODEL,
-        "input": text  # OpenAI-compatible format
-    }
+def get_embedding(text: str, model: Optional[str] = None):
+    """Delegate to provider embeddings API (OpenAI-compatible)."""
+    provider = get_provider(request)
     try:
-        logger.info(f"Calling embedding endpoint for text length: {len(text)}")
-        response = requests.post(EMBEDDING_ENDPOINT, json=payload)
-        response.raise_for_status()
-        
-        # Parse the response as JSON
-        result = response.json()
-        logger.debug(f"Embedding API response keys: {list(result.keys())}")
-        
-        # Handle different response formats based on the API
-        if "data" in result and len(result["data"]) > 0 and "embedding" in result["data"][0]:
-            # Standard OpenAI format
-            return result["data"][0]["embedding"]
-        elif "embedding" in result:
-            # Direct embedding format
-            return result["embedding"]
-        else:
-            logger.warning(f"Unexpected embedding response format: {result}")
-            return []
-            
-    except requests.RequestException as e:
-        logger.error(f"Error calling embedding endpoint: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            logger.error(f"Response content: {e.response.text}")
+        logger.info(f"Calling provider embedding for text length: {len(text)}")
+        return provider.embed(text, model=model or EMBEDDING_MODEL)
+    except Exception as e:
+        logger.error(f"Error calling provider embed: {e}")
         return []
 
 def is_embedding_available():
     try:
-        test_response = requests.post(
-            EMBEDDING_ENDPOINT,
-            json={
-                "model": EMBEDDING_MODEL,
-                "input": "Test"
-            },
-            timeout=3  # Short timeout for quick check
-        )
-        return test_response.status_code == 200
+        # Use default provider (no request context) with short timeout
+        provider = get_provider()
+        vec = provider.embed("Test", model=EMBEDDING_MODEL, timeout=3)
+        return isinstance(vec, list) and len(vec) > 0
     except Exception as e:
         logger.error(f"Error checking embedding availability: {e}")
         return False
@@ -384,53 +357,30 @@ def chat():
                     doc_text = document_store[doc_name]["text"]
                     system_message = f"You are a helpful assistant. Use the following document as context to answer questions:\n\n{doc_text[:2000]}"
         
-        # Set up streaming response to LLM API
+        # Set up streaming response to LLM API via provider
         def generate():
-            # Call API with streaming enabled and selected parameters
-            logger.info(f"Calling chat API with model: {model}, temp: {temperature}, max_tokens: {max_tokens}")
-            response = requests.post(
-                CHAT_ENDPOINT,
-                headers={"Content-Type": "application/json"},
-                json={
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": message}
-                    ],
-                    "temperature": temperature,
-                    "max_tokens": max_tokens,
-                    "stream": True  # Enable streaming
-                },
-                stream=True  # Enable HTTP streaming
+            provider = get_provider(request)
+            logger.info(
+                f"Calling provider chat with model: {model}, temp: {temperature}, max_tokens: {max_tokens}"
             )
-            
-            # Stream the response chunks to frontend
-            for chunk in response.iter_lines():
-                if chunk:
-                    try:
-                        chunk_data = chunk.decode('utf-8')
-                        # Remove "data: " prefix if present (common in SSE)
-                        if chunk_data.startswith("data: "):
-                            chunk_data = chunk_data[6:]
-                        
-                        # Skip "[DONE]" message
-                        if chunk_data.strip() == "[DONE]":
-                            continue
-                            
-                        json_data = json.loads(chunk_data)
-                        # Extract the text from the chunk
-                        if 'choices' in json_data and len(json_data['choices']) > 0:
-                            if 'delta' in json_data['choices'][0]:
-                                content = json_data['choices'][0]['delta'].get('content', '')
-                                if content:
-                                    yield f"data: {json.dumps({'delta': content})}\n\n"
-                    except Exception as e:
-                        logger.error(f"Error processing chunk: {e}, chunk: {chunk}")
-                        continue
-            
+            try:
+                messages = [
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": message},
+                ]
+                for delta in provider.chat_stream(
+                    messages=messages,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                ):
+                    if delta:
+                        yield f"data: {json.dumps({'delta': delta})}\n\n"
+            except Exception as e:
+                logger.error(f"Error during chat stream: {e}")
             # Signal end of stream
             yield f"data: {json.dumps({'end': True})}\n\n"
-            
+
         return Response(stream_with_context(generate()), mimetype='text/event-stream')
         
     except Exception as e:
@@ -512,39 +462,26 @@ def clear_documents():
 
 # Add this endpoint to fetch available models
 
-DEFAULT_MODEL = "deepseek-r1-distill-qwen-32b-mlx"  # Default model
+DEFAULT_MODEL = "gemma2:27b"  # Default model per provider
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_MAX_TOKENS = -1
 
 @app.route('/api/models', methods=['GET'])
 def list_models():
     try:
-        # Call the models endpoint of your local API
-        response = requests.get(f"{LLM_API_URL}/models")
-        
-        if response.status_code == 200:
-            models_data = response.json()
-            return jsonify(models_data)
+        provider = get_provider(request)
+        models = provider.list_models()
+        if models:
+            return jsonify({"data": models})
         else:
-            logger.error(f"Failed to fetch models: {response.status_code}")
-            return jsonify({
-                "error": f"Failed to fetch models: {response.status_code}",
-                # Fallback to some common models that might be available
-                "data": [
-                    {"id": "deepseek-r1-distill-qwen-32b-mlx"},
-                    {"id": "deephermes-3-llama-3-8b-preview"},
-                    {"id": "llama3-8b-8192"}
-                ]
-            }), 502
+            raise RuntimeError("Empty model list from provider")
     except Exception as e:
         logger.exception(f"Error fetching models: {e}")
         return jsonify({
             "error": str(e),
-            # Fallback to some common models
+            # Minimal fallback including gemma2:27b
             "data": [
-                {"id": "deepseek-r1-distill-qwen-32b-mlx"},
-                {"id": "deephermes-3-llama-3-8b-preview"},
-                {"id": "llama3-8b-8192"}
+                {"id": "gemma2:27b"}
             ]
         }), 500
 
