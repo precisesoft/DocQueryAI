@@ -3,8 +3,8 @@ import json
 import requests
 from PyPDF2 import PdfReader  # pip install PyPDF2
 
-EMBEDDING_ENDPOINT = "http://127.0.0.1:1234/v1/embeddings"
-MODEL_NAME = "text-embedding-bge-m3"
+EMBEDDING_ENDPOINT = "http://127.0.0.1:11434/v1/embeddings"
+MODEL_NAME = "bge-m3"
 
 def read_text_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:

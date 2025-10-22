@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Sidebar from './components/Sidebar';
-import ChatInterface from './components/ChatInterface';
-import SaveConversationModal from './components/SaveConversationModal';
-import './App.css';
+import RevampLayout from './components/RevampLayout';
+import './index.css';
 
-// Make sure this matches your backend URL and port
-const API_URL = 'http://localhost:5001/api';
+// Backend API base
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 function App() {
+  // theme (dark mode)
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [compact, setCompact] = useState(() => localStorage.getItem('compact') === 'true');
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [messages, setMessages] = useState([
@@ -20,14 +26,19 @@ function App() {
   ]);
   const [loading, setLoading] = useState(false);
   const [chatMode, setChatMode] = useState('general'); // 'general' or 'document'
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [savedConversations, setSavedConversations] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'documents' | 'settings'
   const [modelSettings, setModelSettings] = useState({
-    model: 'deepseek-r1-distill-qwen-32b-mlx',
+    model: 'gemma2:27b',
     temperature: 0.7,
     maxTokens: -1
   });
+
+  // persist compact mode
+  useEffect(() => {
+    localStorage.setItem('compact', String(compact));
+  }, [compact]);
 
   // Fetch documents on component mount
   useEffect(() => {
@@ -104,6 +115,33 @@ function App() {
       // Auto-select the uploaded document and switch to document mode
       setSelectedDocument(response.data.filename);
       setChatMode('document');
+      
+      // Queue an async extraction job for this file so it appears in Jobs dashboard
+      try {
+        const createResp = await fetch(`${API_URL}/jobs/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: response.data.filename,
+            max_pages: 2,
+            scale: 1.6,
+            model: modelSettings.model || 'gemma3:12b',
+            agent_version: 'v1'
+          })
+        });
+        const createJson = await createResp.json();
+        if (createResp.ok) {
+          setMessages(prev => [...prev, { 
+            id: prev.length + 1, 
+            text: `🧾 Extraction job queued: ${createJson.job_id}. Track it in the Jobs tab.`, 
+            sender: "bot" 
+          }]);
+        } else {
+          setMessages(prev => [...prev, { id: prev.length + 1, text: `⚠️ Job queue error: ${createJson.error || createResp.status}`, sender: 'bot' }]);
+        }
+      } catch (e) {
+        console.error('Job create error', e);
+      }
       
     } catch (error) {
       console.error('Error uploading document:', error);
@@ -230,31 +268,23 @@ function App() {
     ]);
   };
 
-  // Save conversation to localStorage
-  const handleSaveConversation = (title) => {
-    const newConversation = {
-      id: Date.now().toString(),
-      title: title,
-      timestamp: new Date().toISOString(),
-      messages: messages,
-      document: selectedDocument,
-      chatMode: chatMode
-    };
-
-    const updatedConversations = [...savedConversations, newConversation];
-    setSavedConversations(updatedConversations);
-    localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
-  };
-
-  // Generate a suggested title based on conversation
-  const generateSuggestedTitle = () => {
-    // Find first user message or use current date
+  // Autosave current conversation if it has user messages
+  const saveCurrentConversationIfNeeded = () => {
+    const hasUserMessages = messages.some(msg => msg.sender === 'user');
+    if (!hasUserMessages) return;
     const firstUserMsg = messages.find(msg => msg.sender === 'user');
-    if (firstUserMsg) {
-      // Truncate to reasonable length for a title
-      return firstUserMsg.text.substring(0, 30) + (firstUserMsg.text.length > 30 ? '...' : '');
-    }
-    return `Conversation ${new Date().toLocaleDateString()}`;
+    const title = firstUserMsg ? (firstUserMsg.text.length > 30 ? firstUserMsg.text.slice(0,30) + '...' : firstUserMsg.text) : `Conversation ${new Date().toLocaleDateString()}`;
+    const conv = {
+      id: Date.now().toString(),
+      title,
+      timestamp: new Date().toISOString(),
+      messages,
+      document: selectedDocument,
+      chatMode,
+    };
+    const updated = [...savedConversations, conv];
+    setSavedConversations(updated);
+    localStorage.setItem('savedConversations', JSON.stringify(updated));
   };
 
   // Update the loadConversation function
@@ -273,6 +303,7 @@ function App() {
     setMessages(conversation.messages);
     setSelectedDocument(conversation.document);
     setChatMode(conversation.chatMode || 'general');
+    setActiveTab('chat');
   };
 
   // Delete a saved conversation
@@ -280,6 +311,13 @@ function App() {
     const updatedConversations = savedConversations.filter(conv => conv.id !== id);
     setSavedConversations(updatedConversations);
     localStorage.setItem('savedConversations', JSON.stringify(updatedConversations));
+  };
+
+  // Rename a saved conversation
+  const renameConversation = (id, title) => {
+    const updated = savedConversations.map(conv => conv.id === id ? { ...conv, title } : conv);
+    setSavedConversations(updated);
+    localStorage.setItem('savedConversations', JSON.stringify(updated));
   };
 
   // Export a single conversation as a JSON file
@@ -368,9 +406,8 @@ function App() {
         "Starting a new chat will save the current conversation and clear the chat. Continue?"
       );
       if (!confirmNew) return;
-      
-      // Rest of the function remains the same...
-      // ... (auto-saving code)
+      // autosave previous conversation
+      saveCurrentConversationIfNeeded();
     }
     
     // Reset to initial state
@@ -378,6 +415,7 @@ function App() {
       { id: 1, text: "Hello! You can chat with me directly or upload documents for more specific help.", sender: "bot" }
     ]);
     setSelectedDocument(null);
+    setActiveTab('chat');
     
     // Show notification
     setNotification("Previous conversation saved. Started new chat.");
@@ -429,40 +467,65 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      {notification && <div className="notification">{notification}</div>}
-      <Sidebar 
-        documents={documents} 
+    <div className="h-screen">
+      {notification && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-md bg-secondary text-secondary-foreground px-4 py-2 shadow">
+          {notification}
+        </div>
+      )}
+      <RevampLayout
+        documents={documents}
         selectedDocument={selectedDocument}
-        onSelectDocument={setSelectedDocument}
-        onUpload={handleDocumentUpload}
-        loading={loading}
-        savedConversations={savedConversations}
-        onLoadConversation={loadConversation}
-        onDeleteConversation={deleteConversation}
-        onExportConversation={exportConversation}
-        onExportAllConversations={exportAllConversations}
-        onImportConversations={importConversations}
-        onClearDocuments={clearDocuments}
-      />
-      
-      <ChatInterface 
         messages={messages}
-        onSendMessage={sendMessage}
         loading={loading}
         chatMode={chatMode}
-        onToggleMode={toggleChatMode}
-        onSaveConversation={() => setSaveModalOpen(true)}
-        onNewChat={startNewChat}
         modelSettings={modelSettings}
+        savedConversations={savedConversations}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        onSelectDocument={setSelectedDocument}
+        onUpload={handleDocumentUpload}
+        onClearDocuments={clearDocuments}
+        onSendMessage={sendMessage}
+        onToggleMode={toggleChatMode}
+        onNewChat={startNewChat}
         onUpdateModelSettings={setModelSettings}
-      />
-      
-      <SaveConversationModal
-        isOpen={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
-        onSave={handleSaveConversation}
-        suggestedTitle={generateSuggestedTitle()}
+        onLoadConversation={loadConversation}
+        onDeleteConversation={deleteConversation}
+        onRenameConversation={renameConversation}
+        onExportConversation={exportConversation}
+        onExportAllConversations={exportAllConversations}
+      onImportConversations={importConversations}
+      onRunJob={async (filename)=>{
+        try {
+          setLoading(true);
+          const resp = await fetch(`${API_URL}/jobs/create`, { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({
+              filename,
+              max_pages: 2,
+              scale: 1.6,
+              model: modelSettings.model || 'gemma3:12b',
+              agent_version: 'v1'
+            })
+          });
+          const json = await resp.json();
+          if (!resp.ok) throw new Error(json?.error || `HTTP ${resp.status}`);
+          localStorage.setItem('latestJobId', json.job_id);
+          setMessages(prev => [...prev, { id: prev.length + 1, sender: 'bot', text: `🧾 Extraction job queued: ${json.job_id}. Open Shipment Data Extractor to view status.` }]);
+          setActiveTab('extractor');
+        } catch (e) {
+          setMessages(prev => [...prev, { id: prev.length + 1, sender:'bot', text: `Job error: ${e.message}`}]);
+          setActiveTab('extractor');
+        } finally {
+          setLoading(false);
+        }
+      }}
+      theme={theme}
+      onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      compact={compact}
+      onToggleCompact={() => setCompact((c) => !c)}
       />
     </div>
   );

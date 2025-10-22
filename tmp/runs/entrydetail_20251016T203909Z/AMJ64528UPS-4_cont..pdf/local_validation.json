@@ -1,0 +1,12 @@
+{
+  "schema_ok": false,
+  "missing_required": [
+    "entryTypeCode",
+    "operType",
+    "mnlFileInd",
+    "entrdThruPortId",
+    "sbmsnDate",
+    "uspsContentReviewedAcceptedFlag"
+  ],
+  "warnings": []
+}

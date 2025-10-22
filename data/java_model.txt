@@ -1,0 +1,413 @@
+public class EntryDetail
+{
+    private String entryTypeCode; // Required: true, MaxLength: 3, Default "67", Always use default as this is not available in the manifest
+    private String operType; // Required: true, MaxLength: 10, Default "RG", Always use default as this is not available in the manifest
+    private String pstlTrckngNum; // Required: false, MaxLength: 25, Corresponds to House Air Waybill (HAWB/HWB), Master Air Waybill (MAWB), or Tracking Number
+    private String mnlFileInd; // Required: true, MaxLength: 1, Default "Y", Always use default as this is not available in the manifest
+    private Long entrdThruPortId; // Required: true, MaxLength: 7, Default 1000, Always use default as this is not available in the manifest
+    private Date sbmsnDate; // Required: true, Corresponds to today's date
+    private List<Line> lines = new ArrayList<>(); // Required: true, Should only contain one record per Product/Item/Merchandise/Good
+    private List<EntryAddress> entryAddress = new ArrayList<>(); // Required: true, Should contain two records: one corresponding to the exporter/shipper/return address, and one corresponding to the consignee/recipient/destination address
+    private boolean uspsContentReviewedAcceptedFlag; // Required: true, Default false, Always use default as this is not available in the manifest
+}
+
+public class Line
+{
+    private Integer lineNum; // Required: true, MaxLength: 4, Sequential number starting at 1
+    private String imprtrPrdctDescText; // Required: true, MaxLength: 240, Corresponds to the Product/Item/Merchandise Description or Description of Goods
+    private String isoCntryCode; // Required: true, Default "??", MaxLength: 2, Corresponds to the country of origin, Acceptable values are defined in the object Country.name but should default to "??" if this cannot be determined
+    private String lctnRmrksText; // Required: true, MaxLength: 240, Corresponds to the manifest file name and record number
+    private Long mfgFirmFeiNum; // Required: true, MaxLength: 10, Default 1, Always use default as this is not available in the manifest
+    private Long prdctId; // Required: true, MaxLength: 10, Default 177487, Always use default as this is not available in the manifest
+    private Date smplAvlbltyDate; // Required: true, Corresponds to today's date
+    private BigDecimal totalQty; // Required: true, Default 1.000, MaxLength: 38, Precision 3, Corresponds to the total weight and must be greater than or equal to 1.000 (even if the manifests shows less)
+    private String unitOfMsrCode; // Required: true, MaxLength: 4, Default "LB", corresponds to the unit of measure for weight as either pounds ("LB") or kilograms ("KG")
+    private String unitType; // Required: true, MaxLength: 1, Default "W"
+    private BigDecimal valueGoodsAmt; // Required: true, Default 0.01, MaxLength: 12, Precision 2, Corresponds to the total value/price and must be greater than or equal to 0.01 (even if the manifests shows less)
+    private boolean isAbvEntry; // Required: true, Default true, Always use default as this is not available in the manifest
+	private ProductCode productCode; // Required: true
+    private List<Quantity> quantity = new ArrayList<>(); // Required: true, Should contain two records: one corresponding to the total pieces/count/quantity, and one corresponding to the individual weight per piece/count/quantity (may require dividing total weight by total pieces/count/quantity)
+}
+
+public class ProductCode
+{
+    private String industryCode; // Required: true, MaxLength: 2, Default "01", Always use default as this is not available in the manifest
+    private String classCode; // Required: true, MaxLength: 1, Default "U", Always use default as this is not available in the manifest
+    private String groupCode; // Required: true, MaxLength: 2, Default "00", Always use default as this is not available in the manifest
+    private String gpiCode; // Required: true, MaxLength: 2, Default "UN", Always use default as this is not available in the manifest
+    private String productDesc; // Required: true, MaxLength: 100, Default "UNKNOWN", Always use default as this is not available in the manifest
+    private Long productId; // Required: true, MaxLength: 10, Default 177487, Always use default as this is not available in the manifest
+}
+
+public class Quantity
+{
+    private BigDecimal displayOrderId; // Required: true, MaxLength: 3, Sequential number starting at 1
+    private String unitOfMsrCode; // Required: true, MaxLength: 4, If corresponding to the total pieces/count/quantity then use "PK", if corresponding to the individual weight per piece/count/quantity (may require dividing total weight by total pieces/count/quantity) use unit of measure for weight as either pounds ("LB") or kilograms ("KG")
+    private double unitsQty; // Required: true, Default 1.000, MaxLength: 38, Precision 3, Corresponds to the total pieces/count/quantity or weight per piece/count/quantity (may require dividing total weight by total pieces/count/quantity), if corresponding to total piece/count/quantity then must be greater than or equal to 1.000 (even if the manifests shows less)
+    private String ntcInd; // Required: true, MaxLength: 1, Default "N", Always use default as this is not available in the manifest
+}
+
+public class EntryAddress extends GenericEntity implements Serializable
+{
+    private String name; // Required: true, Default "UNKNOWN", MaxLength: 200, Corresponds to the addressee name (individual or business)
+    private String line1Adrs; // Required: true, Default "UNKNOWN", MaxLength: 110, Corresponds to the street number, street name, and any additional information such as unit/building/apartment number
+    private String line2Adrs; // Required: false, MaxLength: 110, Corresponds to any additional lines for the street number, street name, and any additional information such as unit/building/apartment number as needed
+    private String cityName; // Required: true, Default "UNKNOWN", MaxLength: 100, Corresponds to the city name
+    private String stateCode; // Required: true, Default "??", MaxLength: 2, Corresponds to the state listed in the address, Acceptable values are defined in the object State.name but should default to "??" if this cannot be determined
+    private String zipCode; // Required: true, Default 00000, MaxLength: 15, Corresponds to either a 5 digit zip code in the regex pattern "\d{5}" or a 9 digit zip code in the regex pattern "\d{5}-\d{4}" and should default to 00000 if either of these patterns cannot be matched
+    private String isoCntryCode; // Required: true, Default "??", MaxLength: 2, Corresponds to the country listed in the address, Acceptable values are defined in the object Country.name but should default to "??" if this cannot be determined
+    private String entryAddrType; // Required: false, MaxLength: 240, Use value of "Return Addressee" for exporter/shipper/return address, otherwise leave it null/undefined
+}
+
+public enum Country {
+    NC("New Caledonia"),
+    VU("Vanuatu"),
+    GA("Gabon"),
+    GM("Gambia, The"),
+    DE("Germany"),
+    GH("Ghana"),
+    GI("Gibraltar"),
+    GR("Greece"),
+    GL("Greenland"),
+    GD("Grenada"),
+    GP("Guadeloupe"),
+    GT("Guatemala"),
+    GN("Guinea"),
+    GY("Guyana"),
+    HT("Haiti"),
+    HM("Heard & McDonald Islands"),
+    HN("Honduras"),
+    HK("Hong Kong SAR"),
+    HU("Hungary"),
+    IS("Iceland"),
+    IN("India"),
+    ID("Indonesia"),
+    IR("Iran"),
+    IQ("Iraq"),
+    IE("Ireland"),
+    IL("Israel"),
+    IT("Italy"),
+    CI("Ivory Coast"),
+    JM("Jamaica"),
+    JP("Japan"),
+    JO("Jordan"),
+    KE("Kenya"),
+    KP("Korea, Democratic Peoples Repu"),
+    KR("Korea (the Republic of)"),
+    KW("Kuwait"),
+    DK("Denmark"),
+    DM("Dominica"),
+    MQ("Martinique"),
+    MR("Mauritania"),
+    MU("Mauritius"),
+    SY("Syrian Arab Republic"),
+    TZ("Tanzania, United Republic Of"),
+    TH("Thailand"),
+    TG("Togo"),
+    TK("Tokelau Islands"),
+    TO("Tonga"),
+    TT("Trinidad & Tobago"),
+    AE("United Arab Emirates"),
+    TN("Tunisia"),
+    TR("Turkey"),
+    TC("Turks and Caicos Islands (the)"),
+    TV("Tuvalu"),
+    UG("Uganda"),
+    EG("Egypt"),
+    GB("United Kingdom"),
+    US("United States"),
+    NZ("New Zealand"),
+    NI("Nicaragua"),
+    NE("Niger"),
+    NG("Nigeria"),
+    NU("Niue"),
+    NF("Norfolk Island"),
+    NO("Norway"),
+    PK("Pakistan"),
+    PA("Panama"),
+    PG("Papua New Guinea"),
+    PY("Paraguay"),
+    PE("Peru"),
+    PH("Philippines"),
+    PN("Pitcairn Island"),
+    PL("Poland"),
+    PT("Portugal"),
+    GW("Guinea-Bissau"),
+    QA("Qatar"),
+    RE("Reunion"),
+    LA("Lao Peoples Democratic Repblc."),
+    LB("Lebanon"),
+    LS("Lesotho"),
+    LR("Liberia"),
+    LI("Liechtenstein"),
+    LU("Luxembourg"),
+    MO("Macao"),
+    MG("Madagascar"),
+    MW("Malawi"),
+    MY("Malaysia"),
+    MV("Maldives"),
+    ML("Mali"),
+    MT("Malta"),
+    CH("Switzerland"),
+    VN("Vietnam"),
+    WF("Wallis & Futuna Islands"),
+    WS("Western Samoa"),
+    YE("Yemen"),
+    YU("Yugoslavia"),
+    ZM("Zambia"),
+    BJ("Benin"),
+    DJ("Djibouti"),
+    EH("Western Sahara"),
+    FM("Micronesia, Federated State Of"),
+    KH("Cambodia"),
+    KI("Kiribati"),
+    KN("Saint Kitts and Nevis"),
+    MH("Marshall Islands"),
+    NA("Namibia"),
+    PW("Palau"),
+    VE("Venezuela"),
+    UY("Uruguay"),
+    VA("Holy See (the)"),
+    RO("Romania"),
+    RW("Rwanda"),
+    SH("Saint Helena"),
+    LC("Saint Lucia"),
+    PM("Saint Pierre and Miquelon"),
+    VC("St. Vincent & The Grenadines"),
+    SM("San Marino"),
+    ST("Sao Tome & Principe"),
+    SA("Saudi Arabia"),
+    SN("Senegal"),
+    SC("Seychelles"),
+    SL("Sierra Leone"),
+    SG("Singapore"),
+    SO("Somalia"),
+    ZA("South Africa"),
+    ZW("Zimbabwe"),
+    YD("Yemen, Democratic"),
+    ES("Spain"),
+    SD("Sudan"),
+    SR("Suriname"),
+    SJ("Svalbard and Jan Mayen"),
+    SZ("Swaziland"),
+    SE("Sweden"),
+    GE("Georgia"),
+    CD("Congo, Dem Rep of (Kinshasa)"),
+    RS("Serbia"),
+    ME("Montenegro"),
+    TL("Timor Leste"),
+    KV("Kosovo"),
+    SK("Slovakia"),
+    KM("Comoros"),
+    CG("Congo (Brazzaville)"),
+    CK("Cook Islands"),
+    CR("Costa Rica"),
+    AI("Anguilla"),
+    TF("French Southern Antarctic"),
+    BF("Burkina Faso"),
+    AW("Aruba"),
+    LY("Libya"),
+    UA("Ukraine"),
+    UM("United States Outlying Islands"),
+    AM("Armenia"),
+    AZ("Azerbaijan"),
+    BY("Belarus"),
+    KG("Kyrgyzstan"),
+    MD("Moldova"),
+    RU("Russia"),
+    TJ("Tajikistan"),
+    TM("Turkmenistan"),
+    UZ("Uzbekistan"),
+    KZ("Kazakhstan"),
+    EE("Estonia"),
+    MM("Burma (Myanmar)"),
+    BU("Burma"),
+    WE("West Bank"),
+    LV("Latvia"),
+    LT("Lithuania"),
+    GZ("Gaza Strip"),
+    BA("Bosnia-Hercegovina"),
+    HR("Croatia"),
+    SI("Slovenia"),
+    MK("Macedonia"),
+    CZ("Czech Republic"),
+    ER("Eritrea"),
+    CX("Christmas Island"),
+    CC("Cocos (Keeling) Islands (the)"),
+    CO("Colombia"),
+    GQ("Equatorial Guinea"),
+    ET("Ethiopia"),
+    FO("Faroe Islands"),
+    FK("Falkland Islands"),
+    FJ("Fiji"),
+    FI("Finland"),
+    FR("France"),
+    GF("French Guiana"),
+    PF("French Polynesia"),
+    CU("Cuba"),
+    CY("Cyprus"),
+    AF("Afghanistan"),
+    AL("Albania"),
+    DZ("Algeria"),
+    AD("Andorra"),
+    AO("Angola"),
+    AG("Antigua & Barbuda"),
+    AR("Argentina"),
+    AU("Australia"),
+    AT("Austria"),
+    BS("Bahamas"),
+    BH("Bahrain"),
+    BD("Bangladesh"),
+    BB("Barbados"),
+    BE("Belgium"),
+    BM("Bermuda"),
+    BT("Bhutan"),
+    BO("Bolivia"),
+    BW("Botswana"),
+    BR("Brazil"),
+    BZ("Belize"),
+    IO("British Indian Ocean Territory"),
+    SB("Solomon Islands"),
+    VG("British Virgin Islands"),
+    BN("Brunei Darussalam"),
+    BG("Bulgaria"),
+    BI("Burundi"),
+    CM("Cameroon"),
+    CA("Canada"),
+    CV("Cape Verde"),
+    KY("Cayman Islands"),
+    CF("Central African Republic"),
+    LK("Sri Lanka"),
+    TD("Chad"),
+    CL("Chile"),
+    CN("China"),
+    TW("Taiwan"),
+    DO("Dominican Republic (the)"),
+    EC("Ecuador"),
+    SV("El Salvador"),
+    MX("Mexico"),
+    MC("Monaco"),
+    MN("Mongolia"),
+    MS("Montserrat"),
+    MA("Morocco"),
+    MZ("Mozambique"),
+    OM("Oman"),
+    NR("Nauru"),
+    NP("Nepal"),
+    NL("Netherlands"),
+    CW("Curacao"),
+    SX("Sint Maarten (Southern)"),
+    SS("South Sudan"),
+    QZ("Akrotiri"),
+    XA("Ashmore and Cartier Islands"),
+    XB("Baker Island"),
+    CP("Clipperton Island"),
+    XC("Coral Sea Islands"),
+    XH("Howland Island"),
+    XJ("Jan Mayen"),
+    XQ("Jarvis Island"),
+    JE("Jersey"),
+    XU("Johnston Atoll"),
+    XM("Kingman Reef"),
+    QM("Midway Islands"),
+    XV("Navassa Island"),
+    XP("Palmyra Atoll"),
+    BL("Saint Barthelemy"),
+    MF("Saint Martin"),
+    XR("Svalbard"),
+    QW("Wake Island"),
+    BV("Bouvet Island"),
+    YT("Mayotte"),
+    IM("Isle Of Man"),
+    GS("S.Georgia & S.Sandwich Islands");
+
+    private final String displayName;
+
+    Country(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getName() {
+        return this.name();
+    }
+}
+
+public enum State {
+    AL("Alabama"),
+    AK("Alaska"),
+    AZ("Arizona"),
+    AR("Arkansas"),
+    CA("California"),
+    CO("Colorado"),
+    CT("Connecticut"),
+    DE("Delaware"),
+    DC("District of Columbia"),
+    FL("Florida"),
+    GA("Georgia"),
+    HI("Hawaii"),
+    ID("Idaho"),
+    IL("Illinois"),
+    IN("Indiana"),
+    IA("Iowa"),
+    KS("Kansas"),
+    KY("Kentucky"),
+    LA("Louisiana"),
+    ME("Maine"),
+    MD("Maryland"),
+    MA("Massachusetts"),
+    MI("Michigan"),
+    MN("Minnesota"),
+    MS("Mississippi"),
+    MO("Missouri"),
+    MT("Montana"),
+    NE("Nebraska"),
+    NV("Nevada"),
+    NH("New Hampshire"),
+    NJ("New Jersey"),
+    NM("New Mexico"),
+    NY("New York"),
+    NC("North Carolina"),
+    ND("North Dakota"),
+    OH("Ohio"),
+    OK("Oklahoma"),
+    OR("Oregon"),
+    PA("Pennsylvania"),
+    RI("Rhode Island"),
+    SC("South Carolina"),
+    SD("South Dakota"),
+    TN("Tennessee"),
+    TX("Texas"),
+    UT("Utah"),
+    VT("Vermont"),
+    VA("Virginia"),
+    WA("Washington"),
+    WV("West Virginia"),
+    WI("Wisconsin"),
+    WY("Wyoming"),
+    AS("American Samoa"),
+    GU("Guam"),
+    PR("Puerto Rico"),
+    VI("Virgin Islands"),
+    MP("No Mariana Islands"),
+    AA("APO-N/SAmerica-NotCA"),
+    AE("APO-EU/ME/AF&CA"),
+    AP("FPO-Pacific Rim");
+
+    private final String displayName;
+
+    State(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getName() {
+        return this.name();
+    }
+}

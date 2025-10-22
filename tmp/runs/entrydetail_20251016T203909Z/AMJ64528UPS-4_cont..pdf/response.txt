@@ -1,0 +1,73 @@
+{
+  "schema_id": "EntryDetailExtraction",
+  "schema_version": "1.0",
+  "data": {
+    "entryHeader": {
+      "entryTypeCode": "67",
+      "operType": "RG",
+      "mnlFileInd": "Y",
+      "entrdThruPortId": 1000,
+      "mfgFirmFeiNum": 1,
+      "prdctId": 177487,
+      "product": {
+        "industryCode": "01",
+        "classCode": "U",
+        "groupCode": "00",
+        "gpiCode": "UN",
+        "productDesc": "UNKNOWN",
+        "productId": 177487
+      },
+      "entryDate": "2025-10-16"
+    },
+    "entryAddress": [
+      {
+        "entryAddrType": "Return Addressee",
+        "name": "Fresenius-USG - DEDEDO",
+        "line1Adrs": "500 EAGLES LANDING DRIVE",
+        "cityName": "LAKELAND",
+        "stateCode": "FL",
+        "isoCntryCode": "US",
+        "zipCode": "33810"
+      },
+      {
+        "entryAddrType": null,
+        "name": "IASKO KOMET",
+        "line1Adrs": "600 HARMON LOOP RD",
+        "cityName": "DEDEDO",
+        "stateCode": "GU",
+        "isoCntryCode": "GU",
+        "zipCode": "96929"
+      }
+    ],
+    "lines": [
+      {
+        "lineNum": 1,
+        "descriptionOfGoods": "MEDICAL ITEMS",
+        "quantity": [
+          {
+            "quantityValue": 1.000,
+            "unitType": "PK"
+          },
+          {
+            "quantityValue": 1.000,
+            "unitType": "LB"
+          }
+        ],
+        "valueGoodsAmt": 1.00,
+        "pstlTrckngNum": null
+      }
+    ]
+  },
+  "meta": {
+    "agent_version": "v1",
+    "model": "gemma3:12b",
+    "generated_at": "2025-10-16T20:52:53.177583+00:00",
+    "job_id": "457bdab7-b4c4-440e-abe7-3aaa2dfce016",
+    "overall_confidence": 0.95,
+    "validation": {
+      "schema_ok": true,
+      "missing_required": [],
+      "warnings": []
+    }
+  }
+}

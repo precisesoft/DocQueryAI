@@ -1,0 +1,142 @@
+{
+  "schema_id": "shipping_label",
+  "schema_version": "1.0",
+  "doc": {
+    "filename": "DHL Generated Sample 01.pdf",
+    "page_count": 1
+  },
+  "fields": {
+    "shipment_date": {
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.05,
+            "y": 0.06,
+            "w": 0.1,
+            "h": 0.03
+          }
+        }
+      ],
+      "notes": "",
+      "value": "2023-11-16"
+    },
+    "shipper_name": {
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.05,
+            "y": 0.12,
+            "w": 0.25,
+            "h": 0.04
+          }
+        }
+      ],
+      "notes": "",
+      "value": "DHL Generated Sample"
+    },
+    "shipper_address": {
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.05,
+            "y": 0.16,
+            "w": 0.3,
+            "h": 0.04
+          }
+        },
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.05,
+            "y": 0.2,
+            "w": 0.3,
+            "h": 0.04
+          }
+        }
+      ],
+      "notes": "",
+      "value": "DHL Generated Sample"
+    },
+    "recipient_name": {
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.38,
+            "y": 0.12,
+            "w": 0.3,
+            "h": 0.04
+          }
+        }
+      ],
+      "notes": "",
+      "value": "Recipient Name"
+    },
+    "recipient_address": {
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.38,
+            "y": 0.16,
+            "w": 0.3,
+            "h": 0.04
+          }
+        },
+        {
+          "page": 1,
+          "bbox": {
+            "x": 0.38,
+            "y": 0.2,
+            "w": 0.3,
+            "h": 0.04
+          }
+        }
+      ],
+      "notes": "",
+      "value": "Recipient Address"
+    },
+    "reference_numbers": [
+      {
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "page": 1,
+            "bbox": {
+              "x": 0.05,
+              "y": 0.24,
+              "w": 0.2,
+              "h": 0.03
+            }
+          }
+        ],
+        "notes": "",
+        "value": "Reference Number 1"
+      },
+      {
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "page": 1,
+            "bbox": {
+              "x": 0.05,
+              "y": 0.27,
+              "w": 0.2,
+              "h": 0.03
+            }
+          }
+        ],
+        "notes": "",
+        "value": "Reference Number 2"
+      }
+    ]
+  }
+}

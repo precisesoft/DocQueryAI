@@ -1,0 +1,10 @@
+{
+  "job_id": "4dd28be5-0950-4d4b-9bb8-800acfb8dcec",
+  "elapsed_sec": 842.8364861011505,
+  "model": "gemma3:12b",
+  "local_validation": {
+    "schema_ok": true,
+    "missing_required": [],
+    "warnings": []
+  }
+}

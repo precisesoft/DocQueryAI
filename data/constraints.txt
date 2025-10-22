@@ -1,0 +1,291 @@
+EntryDetail Constraints
+	entryTypeCode
+		Required: true
+		MaxLength: 3
+		Default: "67"
+		Business Rule: Always use default (not available in manifest)
+	operType
+		Required: true
+		MaxLength: 10
+		Default: "RG"
+		Business Rule: Always use default (not available in manifest)
+	pstlTrckngNum
+		Required: false
+		MaxLength: 25
+		Data Source: House Air Waybill (HAWB/HWB), Master Air Waybill (MAWB), or Tracking Number
+	mnlFileInd
+		Required: true
+		MaxLength: 1
+		Default: "Y"
+		Business Rule: Always use default (not available in manifest)
+	entrdThruPortId
+		Required: true
+		MaxLength: 7
+		Default: 1000
+		Business Rule: Always use default (not available in manifest)
+	sbmsnDate
+		Required: true
+		Data Source: Today's date
+	lines
+		Required: true
+		Business Rule: Should only contain one record per Product/Item/Merchandise/Good
+	entryAddress
+		Required: true
+		Business Rule: Should contain exactly two records - one for exporter/shipper/return address, one for consignee/recipient/destination address
+	uspsContentReviewedAcceptedFlag
+		Required: true
+		Default: false
+		Business Rule: Always use default (not available in manifest)
+Line Constraints
+	lineNum
+		Required: true
+		MaxLength: 4
+		Business Rule: Sequential number starting at 1
+	imprtrPrdctDescText
+		Required: true
+		MaxLength: 240
+		Data Source: Product/Item/Merchandise Description or Description of Goods
+	isoCntryCode
+		Required: true
+		Default: "??"
+		MaxLength: 2
+		Data Source: Country of origin
+		Validation: Acceptable values defined in Country.name enum, default to "??" if cannot be determined
+	lctnRmrksText
+		Required: true
+		MaxLength: 240
+		Data Source: Manifest file name and record number
+	mfgFirmFeiNum
+		Required: true
+		MaxLength: 10
+		Default: 1
+		Business Rule: Always use default (not available in manifest)
+	prdctId
+		Required: true
+		MaxLength: 10
+		Default: 177487
+		Business Rule: Always use default (not available in manifest)
+	smplAvlbltyDate
+		Required: true
+		Data Source: Today's date
+	totalQty
+		Required: true
+		Default: 1.000
+		MaxLength: 38
+		Precision: 3
+		Data Source: Total weight
+		Validation: Must be greater than or equal to 1.000 (even if manifest shows less)
+	unitOfMsrCode
+		Required: true
+		MaxLength: 4
+		Default: "LB"
+		Data Source: Unit of measure for weight
+		Valid Values: "LB" (pounds) or "KG" (kilograms)
+	unitType
+		Required: true
+		MaxLength: 1
+		Default: "W"
+	valueGoodsAmt
+		Required: true
+		Default: 0.01
+		MaxLength: 12
+		Precision: 2
+		Data Source: Total value/price
+		Validation: Must be greater than or equal to 0.01 (even if manifest shows less)
+	isAbvEntry
+		Required: true
+		Default: true
+		Business Rule: Always use default (not available in manifest)
+	productCode
+		Required: true
+	quantity
+		Required: true
+		Business Rule: Should contain exactly two records - one for total pieces/count/quantity, one for individual weight per piece/count/quantity
+ProductCode Constraints
+	industryCode
+		Required: true
+		MaxLength: 2
+		Default: "01"
+		Business Rule: Always use default (not available in manifest)
+	classCode
+		Required: true
+		MaxLength: 1
+		Default: "U"
+		Business Rule: Always use default (not available in manifest)
+	groupCode
+		Required: true
+		MaxLength: 2
+		Default: "00"
+		Business Rule: Always use default (not available in manifest)
+	gpiCode
+		Required: true
+		MaxLength: 2
+		Default: "UN"
+		Business Rule: Always use default (not available in manifest)
+	productDesc
+		Required: true
+		MaxLength: 100
+		Default: "UNKNOWN"
+		Business Rule: Always use default (not available in manifest)
+	productId
+		Required: true
+		MaxLength: 10
+		Default: 177487
+		Business Rule: Always use default (not available in manifest)
+Quantity Constraints
+	displayOrderId
+		Required: true
+		MaxLength: 3
+		Business Rule: Sequential number starting at 1
+	unitOfMsrCode
+		Required: true
+		MaxLength: 4
+		Business Rules:
+			If for total pieces/count/quantity: use "PK"
+			If for individual weight per piece: use "LB" or "KG" (matching weight unit)
+	unitsQty
+		Required: true
+		Default: 1.000
+		MaxLength: 38
+		Precision: 3
+		Data Source: Total pieces/count/quantity OR weight per piece/count/quantity
+		Validation: If for total pieces/count/quantity, must be ≥ 1.000 (even if manifest shows less)
+		Calculation: For weight per piece, may require dividing total weight by total pieces
+	ntcInd
+		Required: true
+		MaxLength: 1
+		Default: "N"
+		Business Rule: Always use default (not available in manifest)
+EntryAddress Constraints
+	name
+		Required: true
+		Default: "UNKNOWN"
+		MaxLength: 200
+		Data Source: Addressee name (individual or business)
+	line1Adrs
+		Required: true
+		Default: "UNKNOWN"
+		MaxLength: 110
+		Data Source: Street number, street name, and additional info (unit/building/apartment)
+	line2Adrs
+		Required: false
+		MaxLength: 110
+		Data Source: Additional address lines as needed
+	cityName
+		Required: true
+		Default: "UNKNOWN"
+		MaxLength: 100
+		Data Source: City name
+	stateCode
+		Required: true
+		Default: "??"
+		MaxLength: 2
+		Data Source: State from address
+		Validation: Acceptable values defined in State.name enum, default to "??" if cannot be determined
+	zipCode
+		Required: true
+		Default: "00000"
+		MaxLength: 15
+		Format Validation: Must match regex patterns:
+			5-digit: \d{5}
+			9-digit: \d{5}-\d{4}
+		Default to "00000" if patterns don't match
+	isoCntryCode
+		Required: true
+		Default: "??"
+		MaxLength: 2
+		Data Source: Country from address
+		Validation: Acceptable values defined in Country.name enum, default to "??" if cannot be determined
+	entryAddrType
+		Required: false
+		MaxLength: 240
+		Business Rules:
+		Use "Return Addressee" for exporter/shipper/return address
+		Leave null/undefined for consignee/recipient/destination address
+Business Logic Constraints
+	Data Relationships
+		Each Line must have exactly 2 Quantity records
+		EntryDetail must have exactly 2 EntryAddress records
+		Line numbers must be sequential starting from 1
+		Quantity displayOrderId must be sequential starting from 1
+	Calculation Requirements
+		Individual weight per piece = totalQty ÷ total pieces (when applicable)
+		All weight and value minimums must be enforced regardless of manifest data
+		Unit consistency between Line.unitOfMsrCode and corresponding Quantity.unitOfMsrCode
+	Default Value Priority
+		Always use specified defaults when manifest data is unavailable
+		Validation rules override manifest data for minimum values
+		Country/State codes fall back to "??" when determination is impossible
+	Reponse Requirements
+		Data should be returned in a JSON format
+
+Example EntryData response:
+	{
+	  "entryTypeCode": "67",
+	  "operType": "RG",
+	  "pstlTrckngNum": "1Z999AA1234567890",
+	  "mnlFileInd": "Y",
+	  "entrdThruPortId": 1000,
+	  "sbmsnDate": "2025-10-16",
+	  "lines": [
+		{
+		  "lineNum": 1,
+		  "imprtrPrdctDescText": "Vitamin D Supplements",
+		  "isoCntryCode": "JP",
+		  "lctnRmrksText": "manifest_file_20251016_001.xml - Record #45",
+		  "mfgFirmFeiNum": 1,
+		  "prdctId": 177487,
+		  "smplAvlbltyDate": "2025-10-16",
+		  "totalQty": 25.500,
+		  "unitOfMsrCode": "LB",
+		  "unitType": "W",
+		  "valueGoodsAmt": 1250.75,
+		  "isAbvEntry": true,
+		  "productCode": {
+			"industryCode": "01",
+			"classCode": "U",
+			"groupCode": "00",
+			"gpiCode": "UN",
+			"productDesc": "UNKNOWN",
+			"productId": 177487
+		  },
+		  "quantity": [
+			{
+			  "displayOrderId": 1.0,
+			  "unitOfMsrCode": "PK",
+			  "unitsQty": 50.000,
+			  "ntcInd": "N"
+			},
+			{
+			  "displayOrderId": 2.0,
+			  "unitOfMsrCode": "LB",
+			  "unitsQty": 0.510,
+			  "ntcInd": "N"
+			}
+		  ]
+		}
+	  ],
+	  "entryAddress": [
+		{
+		  "name": "Tokyo Natural Foods Co., Ltd.",
+		  "line1Adrs": "3-15-7 Shibuya Building, 4th Floor",
+		  "line2Adrs": "Shibuya District",
+		  "cityName": "Tokyo",
+		  "stateCode": "??",
+		  "zipCode": "00000",
+		  "isoCntryCode": "JP",
+		  "entryAddrType": "Return Addressee"
+		},
+		{
+		  "name": "Healthy Living Imports LLC",
+		  "line1Adrs": "2847 Commerce Street, Suite 200",
+		  "line2Adrs": null,
+		  "cityName": "Dallas",
+		  "stateCode": "TX",
+		  "zipCode": "75226-1234",
+		  "isoCntryCode": "US",
+		  "entryAddrType": null
+		}
+	  ],
+	  "uspsContentReviewedAcceptedFlag": false
+	}

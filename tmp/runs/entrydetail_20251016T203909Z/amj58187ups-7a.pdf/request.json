@@ -1,0 +1,178 @@
+{
+  "model": "gemma3:12b",
+  "prompt": "You are an expert shipping/manifest extraction agent. Your task is to produce a valid EntryDetail JSON object that strictly conforms to the provided JSON Schema. You will be given page images of the document. Do not use OCR fallbacks; only infer from the images. Do not fabricate values.\n\nOutput rules\n- Output ONLY JSON; no comments or markdown.\n- Conform exactly to the EntryDetail JSON Schema.\n- When a field is marked \"Always use default\" in the constraints, emit its default when the document does not specify a value.\n- If a required field has no observable value and no default exists, set a best-effort value per constraints (e.g., country/state fallback \"??\") or leave as null if explicitly allowed by schema. The validator may fail the job if required fields remain null.\n- Lines.quantity must contain exactly two records: one for total pieces (unitOfMsrCode=\"PK\"), one for per-piece weight (unitOfMsrCode=\"LB\" or \"KG\").\n- entryAddress must contain exactly two records: [0] exporter/shipper/return (entryAddrType=\"Return Addressee\"), [1] consignee/recipient/destination (entryAddrType null).\n\nBusiness rules (apply in output)\n- Minima: totalQty \u2265 1.000; valueGoodsAmt \u2265 0.01.\n- Units: Line.unitOfMsrCode in [\"LB\",\"KG\"]; Quantity.unitOfMsrCode in [\"PK\",\"LB\",\"KG\"].\n- Country/state fallbacks: use ISO-2 uppercase codes when determinable; otherwise \"??\".\n- Dates: ISO 8601 (YYYY-MM-DD).\n- Numeric precision: totalQty to 3 decimals; valueGoodsAmt to 2 decimals.\n\nConfidence and evidence (metadata)\n- In a separate meta structure (if requested by schema), provide per-field confidence 0.0\u20131.0 and optional evidence entries {page, bbox} for non-null fields. If not requested, do not include metadata fields in EntryDetail.\n\nNever include explanations. If a value cannot be found, use the specified defaults or leave null when the schema allows it.\n\n\n\nContract: EntryDetail v1\n\nMapping guidance from constraints.txt\n- Defaults (use when missing):\n  entryTypeCode=\"67\", operType=\"RG\", mnlFileInd=\"Y\", entrdThruPortId=1000,\n  mfgFirmFeiNum=1, prdctId=177487, productCode.{industryCode=\"01\",classCode=\"U\",groupCode=\"00\",gpiCode=\"UN\",productDesc=\"UNKNOWN\",productId=177487},\n  totalQty=1.000 (min 1.000), unitOfMsrCode=\"LB\" (Line), unitType=\"W\",\n  valueGoodsAmt=0.01 (min 0.01), quantity[*].ntcInd=\"N\",\n  address fallbacks: name/line1Adrs/cityName=\"UNKNOWN\", stateCode/isoCntryCode=\"??\", zipCode=\"00000\" when patterns not met.\n\n- Required structure:\n  lines: \u22651 items; quantity: exactly 2 items per line (first with PK total pieces, second with LB/KG per-piece weight).\n  entryAddress: exactly 2 items; [0] exporter/shipper/return (entryAddrType=\"Return Addressee\"), [1] consignee/recipient (entryAddrType null).\n\n- Formatting:\n  Dates: YYYY-MM-DD (today where constraints say \"today\u2019s date\").\n  Numbers: totalQty 3 decimals; valueGoodsAmt 2 decimals.\n  Codes: ISO-2 uppercase; allow \"??\" fallback when unknown.\n\n- Validation expectations:\n  - Schema must pass.\n  - Business rules checked by a post-validator (counts, sequence, minima, unit consistency).\n\nField sourcing (vision-only):\n- Use printed names/addresses for entryAddress mapping.\n- `pstlTrckngNum` may be present as text; if not clearly visible, set null (no barcode requirement).\n- Description/weight/value: use obvious text near \u201cDescription of Goods\u201d, \u201cWeight\u201d, or \u201cValue/Price\u201d; otherwise apply defaults/minima.\n\n\n\nYou must return the wrapper object with keys schema_id=s 'EntryDetailExtraction', schema_version='1.0', data (EntryDetail), and meta (metadata). Set meta.agent_version='v1', meta.model='gemma3:12b', meta.generated_at='2025-10-16T20:45:44.766378+00:00', meta.job_id='87e199a5-6501-4b10-afb7-c1c565053fd8'. Set meta.validation with schema_ok=true/false and missing_required/warnings as needed. Use today's date for fields that require it: 2025-10-16. Document: filename=amj58187ups-7a.pdf, page_count=15. ",
+  "images": [
+    "<base64 123160 chars>",
+    "<base64 143312 chars>"
+  ],
+  "format": {
+    "type": "object",
+    "required": [
+      "schema_id",
+      "schema_version",
+      "data",
+      "meta"
+    ],
+    "properties": {
+      "schema_id": {
+        "type": "string",
+        "const": "EntryDetailExtraction"
+      },
+      "schema_version": {
+        "type": "string",
+        "const": "1.0"
+      },
+      "data": {
+        "type": "object"
+      },
+      "meta": {
+        "type": "object",
+        "required": [
+          "agent_version",
+          "model",
+          "generated_at",
+          "job_id",
+          "overall_confidence",
+          "validation"
+        ],
+        "properties": {
+          "agent_version": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "overall_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "field_confidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "confidence"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "field_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "evidence"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "evidence": {
+                  "type": "array",
+                  "minItems": 0,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "page",
+                      "bbox"
+                    ],
+                    "properties": {
+                      "page": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "bbox": {
+                        "type": "object",
+                        "required": [
+                          "x",
+                          "y",
+                          "w",
+                          "h"
+                        ],
+                        "properties": {
+                          "x": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "y": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "w": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          },
+                          "h": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "validation": {
+            "type": "object",
+            "required": [
+              "schema_ok"
+            ],
+            "properties": {
+              "schema_ok": {
+                "type": "boolean"
+              },
+              "missing_required": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "warnings": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "stream": false,
+  "options": {
+    "temperature": 0.2
+  }
+}

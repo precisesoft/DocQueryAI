@@ -1,28 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { FiSettings, FiX } from 'react-icons/fi';
+import { Label } from './ui/label';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select';
+import { Button } from './ui/button';
+import { Slider } from './ui/slider';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 function ModelSettings({ onSave, currentSettings }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [settings, setSettings] = useState({
-    model: currentSettings?.model || 'deepseek-r1-distill-qwen-32b-mlx',
+    model: currentSettings?.model || 'phi3:mini',
     temperature: currentSettings?.temperature || 0.7,
     maxTokens: currentSettings?.maxTokens || -1,
   });
-  
+
   useEffect(() => {
-    // Only fetch models when panel is opened
-    if (isOpen) {
-      fetchModels();
-    }
-  }, [isOpen]);
-  
+    fetchModels();
+    // sync if parent changes
+    setSettings({
+      model: currentSettings?.model || 'phi3:mini',
+      temperature: currentSettings?.temperature || 0.7,
+      maxTokens: currentSettings?.maxTokens || -1,
+    });
+  }, [currentSettings]);
+
   const fetchModels = async () => {
     setLoading(true);
     setError('');
@@ -40,119 +45,70 @@ function ModelSettings({ onSave, currentSettings }) {
       setLoading(false);
     }
   };
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setSettings({
-      ...settings,
-      [name]: name === 'temperature' || name === 'maxTokens' 
-        ? parseFloat(value) 
-        : value
-    });
-  };
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(settings);
-    setIsOpen(false);
-  };
-  
+
   return (
-    <div className="model-settings">
-      <button 
-        className="settings-toggle"
-        onClick={() => setIsOpen(!isOpen)}
-        title={`Model: ${settings.model}`}
-      >
-        <FiSettings />
-        {!isOpen && (
-          <div className="current-model">
-            {settings.model.split('-').slice(-1)[0]}
-          </div>
+    <form
+      onSubmit={(e)=>{ e.preventDefault(); onSave(settings); }}
+      className="space-y-4"
+    >
+      <div className="space-y-2">
+        <Label>Model</Label>
+        {loading ? (
+          <div className="text-sm text-muted-foreground">Loading available models…</div>
+        ) : error ? (
+          <div className="text-sm text-destructive">{error}</div>
+        ) : (
+          <Select value={settings.model} onValueChange={(v)=>setSettings({...settings, model: v})}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a model" />
+            </SelectTrigger>
+            <SelectContent>
+              {models.map((m)=> (
+                <SelectItem key={m.id} value={m.id}>{m.id}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
-      </button>
-      
-      {isOpen && (
-        <div className="settings-panel">
-          <div className="settings-header">
-            <h3>Model Settings</h3>
-            <button className="close-button" onClick={() => setIsOpen(false)}>
-              <FiX />
-            </button>
-          </div>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="model">Model</label>
-              {loading ? (
-                <div className="loading-models">Loading available models...</div>
-              ) : error ? (
-                <div className="error-message">{error}</div>
-              ) : (
-                <select 
-                  id="model" 
-                  name="model"
-                  value={settings.model}
-                  onChange={handleChange}
-                  required
-                >
-                  {models.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.id}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="temperature">
-                Temperature: {settings.temperature}
-              </label>
-              <input 
-                type="range" 
-                id="temperature" 
-                name="temperature"
-                min="0" 
-                max="1.2" 
-                step="0.1"
-                value={settings.temperature}
-                onChange={handleChange}
-              />
-              <div className="range-labels">
-                <span>0 (Precise)</span>
-                <span>1.2 (Creative)</span>
-              </div>
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="maxTokens">Max Tokens</label>
-              <select
-                id="maxTokens"
-                name="maxTokens"
-                value={settings.maxTokens}
-                onChange={handleChange}
-              >
-                <option value="-1">No limit</option>
-                <option value="100">100</option>
-                <option value="500">500</option>
-                <option value="1000">1000</option>
-                <option value="2000">2000</option>
-                <option value="4000">4000</option>
-                <option value="8000">8000</option>
-              </select>
-              <div className="setting-note">
-                -1 means no limit (model decides when to stop)
-              </div>
-            </div>
-            
-            <button type="submit" className="save-settings">
-              Apply Settings
-            </button>
-          </form>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="temperature">Temperature</Label>
+          <div className="text-xs text-muted-foreground">{settings.temperature.toFixed(1)}</div>
         </div>
-      )}
-    </div>
+        <Slider
+          min={0}
+          max={1.2}
+          step={0.1}
+          value={[settings.temperature]}
+          onValueChange={(v)=>setSettings({...settings, temperature: Number(v[0])})}
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>0 (Precise)</span>
+          <span>1.2 (Creative)</span>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="maxTokens">Max Tokens</Label>
+        <Select value={String(settings.maxTokens)} onValueChange={(v)=>setSettings({...settings, maxTokens: parseFloat(v)})}>
+          <SelectTrigger>
+            <SelectValue placeholder="Max tokens" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={"-1"}>No limit</SelectItem>
+            <SelectItem value={"100"}>100</SelectItem>
+            <SelectItem value={"500"}>500</SelectItem>
+            <SelectItem value={"1000"}>1000</SelectItem>
+            <SelectItem value={"2000"}>2000</SelectItem>
+            <SelectItem value={"4000"}>4000</SelectItem>
+            <SelectItem value={"8000"}>8000</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="text-xs text-muted-foreground">-1 means no limit (model decides when to stop)</div>
+      </div>
+      <div className="flex justify-end">
+        <Button type="submit">Apply Settings</Button>
+      </div>
+    </form>
   );
 }
 

@@ -1,0 +1,259 @@
+{
+  "model": "gemma3:12b",
+  "prompt": "You are a shipping document extraction agent.\n\nYour task: from the given page images, extract fields for a shipping label data contract and output ONLY valid JSON that conforms exactly to the provided JSON Schema.\n\nHard rules:\n- Output valid JSON only; no markdown, no comments, no extra keys.\n- For each non-null field, include one or more evidence entries with page (1-indexed) and bounding box (bbox) normalized to [0,1] coordinates relative to the page image: {\"x\",\"y\",\"w\",\"h\"}.\n- If a field does not appear on the page(s), set its value to null and provide an empty evidence array.\n- Do not fabricate values.\n- Preserve case and punctuation for names, addresses, and tracking numbers exactly as printed.\n\nConfidence rubric (0\u20131):\n- 0.95\u20131.0: Exact, clearly labeled data region; high legibility; bbox tight; no ambiguity.\n- 0.75\u20130.94: Exact text, minor ambiguity or partially cropped bbox.\n- 0.50\u20130.74: Readable but moderately ambiguous region or label association.\n- 0.25\u20130.49: Weak/uncertain; text low quality; label implied.\n- 0.00\u20130.24: Not found; value is null.\n\nEvidence:\n- Provide at most 3 evidence entries per field.\n- Prefer the smallest bbox that contains the value and its immediate label if helpful.\n\nDo not include explanations. Follow the schema strictly.\n\n\n\nFill the contract for this document. Set doc.filename and doc.page_count exactly as provided. Use schema_id='shipping_label' and schema_version='1.0'. Use null when a field is absent. Provide bbox and page for each non-null field.\nDoc metadata: filename=amj58187ups-7a.pdf; page_count=15.\n",
+  "images": [
+    "<base64 132352 chars>"
+  ],
+  "format": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://docquery.ai/contracts/shipping_label.v1.schema.json",
+    "title": "shipping_label",
+    "type": "object",
+    "required": [
+      "schema_id",
+      "schema_version",
+      "doc",
+      "fields"
+    ],
+    "properties": {
+      "schema_id": {
+        "type": "string",
+        "const": "shipping_label"
+      },
+      "schema_version": {
+        "type": "string",
+        "const": "1.0"
+      },
+      "agent_version": {
+        "type": "string"
+      },
+      "model": {
+        "type": "string"
+      },
+      "generated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "job_id": {
+        "type": "string"
+      },
+      "doc": {
+        "type": "object",
+        "required": [
+          "filename",
+          "page_count"
+        ],
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "page_count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "fields": {
+        "type": "object",
+        "properties": {
+          "carrier": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "service_level": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "tracking_number": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "shipment_date": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "shipper_name": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "shipper_address": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "recipient_name": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "recipient_address": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "package_count": {
+            "$ref": "#/definitions/fieldNumber"
+          },
+          "weight": {
+            "$ref": "#/definitions/fieldNumber"
+          },
+          "dimensions": {
+            "$ref": "#/definitions/fieldString"
+          },
+          "reference_numbers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/fieldString"
+            },
+            "maxItems": 5
+          }
+        },
+        "additionalProperties": false
+      },
+      "overall_confidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "validation": {
+        "type": "object",
+        "properties": {
+          "schema_ok": {
+            "type": "boolean"
+          },
+          "missing_required": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "schema_ok"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "definitions": {
+      "bbox": {
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "w",
+          "h"
+        ],
+        "properties": {
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "w": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "h": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "evidence": {
+        "type": "object",
+        "required": [
+          "page",
+          "bbox"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "bbox": {
+            "$ref": "#/definitions/bbox"
+          },
+          "snippet": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "fieldBase": {
+        "type": "object",
+        "required": [
+          "value",
+          "confidence",
+          "evidence"
+        ],
+        "properties": {
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/evidence"
+            },
+            "minItems": 0,
+            "maxItems": 3
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "fieldString": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/fieldBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "fieldNumber": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/fieldBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "additionalProperties": false
+  },
+  "stream": false,
+  "options": {
+    "temperature": 0.2
+  }
+}
